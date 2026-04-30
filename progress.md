@@ -2,6 +2,74 @@
 
 > Append-only. Every executor adds an entry on task completion. See base handbook Law 3.
 
+## 2026-04-30 — TASK-015 — Hearth reskin Phase 2 (Recipe Detail) complete
+
+**Executor:** Claude Code (Opus 4.7, 1M context) — explanatory mode
+
+**Branch:** `feat/hearth-recipe-detail` (off `feat/hearth-reskin`).
+
+**Task:** Reskin the recipe-detail surface — `/recipe/[slug]` page assembly + the three tab contents + the tab bar + the actions bar — to the Hearth aesthetic. Architecturally unblocked earlier in this session by the Phase 2 prep commit (ADR-005 + `Button` `icon` variant). Implementation followed the per-component specs in `docs/design/component-specs.md`.
+
+**Commits on this branch (4 total):**
+
+1. **`4a89875`** — Phase 2 prep (logged separately above).
+2. **`ed9fb93`** — Tab contents reskin (IngredientsTab, InstructionsTab, NutritionTab).
+3. **`b23da51`** — TabBar reskin (RecipeTabs).
+4. **(this commit)** — Page assembly (page.tsx + RecipeActions + responsive bleed clamps on Phase 2 components).
+
+**Changed:**
+
+- `src/components/IngredientsTab.tsx` — full Hearth rewrite. ServingsScaler now uses `<Button variant="icon">` wrapping a w-8 h-8 brown circle (visual unchanged at 32px, hit area 44×44 per ADR-005). Ingredients now group by category (the type already had a `category` field; previously rendered flat). When all ingredients are uncategorized, group headings are suppressed. Rows are font-serif name + font-sans tabular qty with linen-dim bottom borders. Drops amber dot bullets and glass cards. Bleeds full-width on mobile (`-mx-6 sm:-mx-10`), clamps at desktop (`lg:mx-0 lg:rounded`).
+- `src/components/InstructionsTab.tsx` — full Hearth rewrite per spec §8. Numbered brown circles (32×32, cream text), Lora 16px steps with line-height 1.65. Drops the before:absolute connecting vertical line and per-step glass cards. "Bon Appetit" completion card simplified — flat linen surface with leaf-tinted CheckCircle2, no gradient. Removed redundant React import (Next.js 14 + new JSX transform).
+- `src/components/NutritionTab.tsx` — full Hearth rewrite preserving all portion-calculator logic (PORTION_UNITS, toGrams, batch-weight fallback chain). Extracted four duplicated MacroGrid renderings into a single subcomponent so styling is single-source-of-truth — drops the per-macro coloring (calories=amber, protein=emerald, carbs=orange, fat=purple) which violated Hearth Rule 4 (one signature per surface). Portion calculator section reskinned per spec §10 inspiration: linen→linen-dim gradient + leaf decorative blob + cream input row. Per-ingredient breakdown table swapped from slate-100 borders + per-macro colored cells to linen-dim borders + ink-soft tabular-nums. Header cells use the same brown caption pattern as IngredientsTab category headings for cross-tab consistency. Subtle logic cleanup: `scaledTotals` computed once at the top instead of inline in each cell's fmt() call (net behavior identical).
+- `src/components/RecipeTabs.tsx` — TabBar reskin per spec §11. Sticky top-0 (the (main) MainNav is a side/bottom nav, not a top header — overrides the spec's top-16 assumption). Frosted via bg-glass-base + backdrop-blur-glass + backdrop-saturate-glass. Active state: text-brown + brown 2px underline. Inactive: text-ink-mute. Drops the previous "white pill with shadow" active state. Bleeds full-width on mobile (`-mx-6 sm:-mx-10`), clamps at desktop (`lg:mx-0`). Adds proper role="tablist" / role="tab" / aria-selected for screen readers (these were missing before). Swaps clsx for the project's cn() helper for consistency with the Phase 1 ui/ primitives.
+- `src/components/RecipeActions.tsx` — full Hearth rewrite. Default-state action buttons (Edit / Replace photo / Delete) use `buttonClass("ghost")` + `border border-brown-glass` for a subtle restrained pill row. Edit form uses Hearth Input + InputLabel primitives from Phase 1; close button uses `<Button variant="icon">`. Delete confirmation card uses bg-linen surface; "Yes, delete" CTA inherits primary Button geometry but overrides bg-rust for destructive intent. Upload error inline message uses cream + rust accent.
+- `src/app/(main)/recipe/[id]/page.tsx` — full Hearth rewrite. Drops the amber/orange decorative background blobs (Hearth = restraint). Drops the `bg-white/30 backdrop-blur-3xl` frosted content panel in favor of a flat cream surface with linen-dim border. Mobile back button is a Link wrapper with `w-11 h-11` hit area and inner `w-9 h-9` cream/30 backdrop-blur circle (44×44 honored per ADR-005, even though it's a Link not a Button — the pattern is portable). Mobile cuisine pill on the dark hero gradient uses `bg-brown/90 + cream text` for legibility. Desktop title uses `font-display` (Playfair) + ink color. StatRow per spec §5: 4-column grid `gap-px bg-linen-dim` with cream cells, no icons (dropped the Clock/Flame/Users/Zap icons in favor of typographic restraint). Dietary tags use Chip pattern (linen pill + ink-soft text). Star rating uses gold + linen-dim. Source link uses brown italic Lora. Bleeds StatRow at mobile (`-mx-6 sm:-mx-10`), clamps and rounds at desktop (`lg:mx-0 lg:rounded lg:overflow-hidden`).
+- `task_plan.md` — TASK-015 moved to Done with full implementation summary across the 4 commits.
+
+**Deferred (intentional, with rationale):**
+
+- **ChatFAB reskin (spec §12).** Global component used on every page, not just /recipe. Bundling it into the recipe-detail reskin would expand scope across the whole app. Separate task when the rest of the surfaces are ready.
+- **PortionCalculator standalone "killer feature" treatment (spec §10).** The current NutritionTab's portion calculator section already implements the underlying logic with the spec §10 visual treatment applied. Elevating it to a more prominent position (e.g. above the tab bar) would be a layout decision separate from a reskin.
+- **ErrorState pattern (spec §18).** This page uses Next.js `notFound()` which routes to the (main)/not-found.tsx — not exercised on the happy path. ErrorState pattern lands when a surface actually needs it.
+- **Card primitive component (spec §3).** The bg-linen + rounded + shadow-lift-sm pattern shows up in 3 places in this commit (RecipeActions delete confirmation, RecipeActions edit form, NutritionTab per-ingredient table). Worth extracting in a follow-up if it shows up in another phase.
+
+**Trade-offs explicitly accepted:**
+
+- The mobile back button uses a raw `<Link>` with manual `w-11 h-11` hit area instead of `<Button variant="icon">`. Reason: Button is a `<button>` element; for a navigation Link the hit-area pattern needs to live on the Link itself. Could be abstracted later (an "icon link" wrapper, or polymorphic Button), but inline is fine for one occurrence.
+- StatRow drops the 4 stat icons (Clock, Flame, Users, Zap). Trade: less visual scanability; gain: matches spec §5 exactly and aligns with Hearth restraint. If user feedback flags this as a regression, icons can come back at small size (e.g. inline before the value).
+- NutritionTab subtly reorganizes — portion calculator section now always renders the "total batch · servings · per-serving g" caption when batch weight exists, not only as a child of the portion-result branch. Slight UX clarification.
+- IngredientsTab now groups by category. Existing recipes may not have category populated for many ingredients (would all fall under "Other" — heading suppressed when all are "Other"). Visual change is invisible for typical existing recipes.
+- RecipeActions edit form swaps cuisine `<select>` from `glass-input` to a Hearth-tokened cream/brown-glass styling. Native select still uses OS dropdown; wrapping in a custom dropdown was out of scope.
+
+**Gates:**
+
+- `npm run lint` → clean (per-commit verified)
+- `npx tsc --noEmit` → clean
+- `npm run test` (vitest scoped to src/) → 111 pass / 7 skipped (no regression — none of these files have unit tests)
+- `npm run test:e2e` → not run (no dev server stood up; e2e selectors preserved per spec — tab labels still "Ingredients" / "Instructions" / "Nutrition")
+- Husky pre-commit → fires on each commit
+- **Browser smoke** → DEFERRED. PR previews don't exist for this repo (TASK-016 in backlog). The only verification paths are (a) merge to main and check production, or (b) local `npm run dev`. Per memory `feedback_verify_before_done.md`, naming this explicitly rather than implying success.
+
+**Anti-bloat audit:**
+
+- 5 files reskinned, 1 file added (StatRow inline in page, no separate component file). Did NOT extract Card / Chip / StatRow / IconButton / etc. into separate component files since each only appears 1-2 times — wait for the third use before abstracting.
+- NutritionTab MacroGrid IS extracted into a subcomponent (within the same file) because it's used 4 times in that file alone. Single-file abstraction, no cross-file API surface.
+- Did NOT add unit tests for the reskinned components — these have no existing tests, and CSS/visual changes are not productively unit-tested.
+- Comments are sparse and explain WHY (e.g. "top-0 since the (main) MainNav is a side/bottom nav, not a top header"). No what-comments.
+
+**Not changed (intentional):**
+
+- All non-recipe pages — gallery, add-recipe, weekly-summary, food-log, profile, etc. Those are Phase 3-4.
+- ChatFAB, MainNav, RecipeCard, RecipeGrid — global / non-recipe-detail components.
+- Service worker, scraper logic, data layer, API routes — none touched.
+- The Ingredient type in `src/lib/types.ts` — already had `category: string | null`, no schema change needed.
+- Existing e2e tests — selectors preserved (tab labels unchanged, button aria-labels preserved).
+
+**Next:** PR for `feat/hearth-recipe-detail` opens when Slim is ready to review. Eventual consolidation: this branch + PR #20 (Phase 0 + 1) + future Phase 3-4 branches all merge as one consolidated Hearth reskin per Slim's 2026-04-30 decision to hold PR #20 and accumulate. PR #21 (TASK-013 fix on `main`) merges independently and earlier; when this branch consolidates with main, the Phase 2 IngredientsTab will have already absorbed the touch-target pattern and the inline classes from PR #21 become moot.
+
+---
+
 ## 2026-04-30 — TASK-015 (prep) — Phase 2 unblocked: ADR-005 + Button icon variant
 
 **Executor:** Claude Code (Opus 4.7, 1M context) — explanatory mode

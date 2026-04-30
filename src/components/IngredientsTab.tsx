@@ -42,7 +42,7 @@ export default function IngredientsTab({
   return (
     <div>
       {/* ServingsScaler — spec §6. Sits above the list. */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-8 px-5 py-4 bg-cream border-y border-linen-dim -mx-6 sm:-mx-10">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-8 px-5 py-4 bg-cream border-y border-linen-dim -mx-6 sm:-mx-10 lg:mx-0 lg:rounded">
         <span className="font-serif text-sm text-ink-soft">Scale recipe</span>
         <div className="flex items-center gap-2.5">
           <Button

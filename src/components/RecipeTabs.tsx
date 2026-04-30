@@ -41,7 +41,7 @@ export default function RecipeTabs({
       <div
         role="tablist"
         aria-label="Recipe sections"
-        className="sticky top-0 z-40 flex px-3 -mx-6 sm:-mx-10 mb-8 bg-glass-base backdrop-blur-glass backdrop-saturate-glass border-b border-glass-line"
+        className="sticky top-0 z-40 flex px-3 -mx-6 sm:-mx-10 lg:mx-0 mb-8 bg-glass-base backdrop-blur-glass backdrop-saturate-glass border-b border-glass-line"
       >
         {TABS.map(({ key, label }) => {
           const isActive = activeTab === key;
