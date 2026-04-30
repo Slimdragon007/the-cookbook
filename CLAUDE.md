@@ -112,6 +112,7 @@ Wired in `.github/workflows/deploy.yml` GH secrets. Resolved in `src/lib/supabas
 ```
 @task_plan.md                  → current task state (architect-owned)
 @progress.md                   → completed work log (append-only)
+@docs/trust-contract.md        → pre-flight compliance gate (read at session start + before any file write)
 @docs/REFERENCE.md             → schema, env vars, file index, current state
 @docs/architecture/ui.md       → Liquid Glass design system, component patterns
 @docs/architecture/api.md      → API routes, scraper architecture, chat endpoint
