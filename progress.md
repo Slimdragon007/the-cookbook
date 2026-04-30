@@ -2,6 +2,40 @@
 
 > Append-only. Every executor adds an entry on task completion. See base handbook Law 3.
 
+## 2026-04-30 — TASK-014 — Hearth reskin Phase 1: /login, /signup, /auth/reset, /auth/update-password
+
+**Executor:** Claude Code (Opus 4.7, 1M context)
+
+**Task:** Apply the Hearth aesthetic (Magnolia warmth + Liquid Glass polish) to the four entry surfaces. UI-only reskin; copy preserved verbatim per design Rule 9; auth flows untouched. Phase 1.4 (`/demo`) deferred to its own commit due to size (526 lines, motion-react state machine, new `StepRibbon` component per spec).
+
+**Changed:**
+
+- `src/lib/utils.ts` (new): thin `cn()` helper over `clsx`. Component-specs.md uses `cn(...)` throughout, so this matches the documented API.
+- `src/components/ui/Button.tsx` (new): primary/secondary/ghost variants per `docs/design/component-specs.md:1-57`. Exports both `<Button>` and a `buttonClass(variant, extra?)` helper so `<Link>` navigation controls wear button styles without a polymorphic `asChild` abstraction.
+- `src/components/ui/Input.tsx` (new): paired `<Input>` + `<InputLabel>`. Cream surface, brown-glass border, `text-base` (16px min on mobile). Label has no baked-in `mb-*` so consumers control spacing via `space-y-*` wrappers.
+- `src/app/login/page.tsx`: Hearth reskin. Cream floor, BookHeart in linen circle, Playfair title, Lora tagline preserved verbatim, brown pill primary CTA, divider, secondary `<Link>` to `/demo`, ghost `<Link>` to `/signup`. Particle splash skipped per architect direction. Bundle 2.81 kB -> 2.55 kB. Shipped in commit `072babb` on PR #20 earlier in the session.
+- `src/app/signup/page.tsx`: Hearth reskin. Same layout grammar. 5-field form. Gold accent on invite-code label + input border per reskin-plan acceptance. Success state uses `Sparkles` in linen circle with `animate-drift-up`. Existing `/api/signup` POST + 3-second redirect to `/login` preserved verbatim.
+- `src/app/auth/reset/page.tsx`: Hearth reskin. Email input + "Send reset link" primary. Sent state shows `Mail` icon in linen circle (leaf-tinted) with `animate-drift-up`. "Back to login" as bare brown text.
+- `src/app/auth/update-password/page.tsx`: Hearth reskin. Two password inputs, "Update password" primary. Recovery-session detection preserved verbatim (`PASSWORD_RECOVERY` / `SIGNED_IN` listener + `getSession()` fallback). Expired-link branch shows "Request new link" as a secondary `<Link>` via `buttonClass("secondary")`. Not in original Phase 1 scope; reskinned for consistency with the rest of the auth surface.
+- `task_plan.md`: TASK-013 updated to flag that it blocks Phase 2 reskin (the spec'd `ServingsScaler` at `w-8 h-8` / 32px is smaller than the broken 36px buttons surfaced in TASK-013). TASK-014 added to Active.
+- `docs/design/hearth-reskin-plan.md`: Phase 2 section gained a touch-target blocker callout listing three architect-decision options (44px buttons direct, invisible padding hit-area, or native stepper input on mobile).
+- `next.config.mjs`: temporarily edited mid-session to disable `setupDevPlatform()` for local visual review, then restored. The local workerd binary version-mismatched against its own validation script (Node-version PATH drift between the user's shell at v22 and a build sub-process invoking v25). Restored before commit.
+
+**Verified:**
+
+- `npm run lint` clean
+- `npx tsc --noEmit` clean
+- `npm run test` -> 111 pass, 7 pre-existing skips (12 files)
+- `npm run test:e2e` -> 28 pass, 1 documented skip
+- `npm run build` -> 11 routes, all clean
+- E2e selectors intact via `auth.spec.ts` and `pages.spec.ts`: heading `/cookbook/i`, label `/email/i`, label `/password/i`, label `/invite/i`, button `/sign in/i`
+
+**Trust contract:**
+
+Mid-session, multiple sections of `docs/trust-contract.md` were caught failing once the contract was actually read (missed at session start; no harness hook injects it). Remediation walked §1 (linguistic), §3 (parallelization lock for `next.config.mjs`), §4 (Shared Memory Contract: no TASK declared, no `progress.md` entry), and §9 (full DOD including e2e). All pass post-remediation. Open follow-up: no SessionStart hook integrates the trust contract; manual discipline only.
+
+---
+
 ## 2026-04-28 — TASK-011 / TASK-012 — Recipe images persist on scrape; targeted responsive cleanup
 
 **Executor:** Claude Code (Opus 4.7, 1M context)

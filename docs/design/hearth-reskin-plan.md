@@ -13,6 +13,7 @@
 Apply the Hearth aesthetic (Magnolia warmth + Liquid Glass polish) as a UI reskin across all 11 production screens of Julie's Cookbook. No new features. No new routes. No copy rewrites. Visual layer only.
 
 Reference assets:
+
 - `docs/design/hearth-prototype.html` — visual target, all 11 screens
 - `docs/design/component-specs.md` — 19 components with anatomy, states, Tailwind class examples
 - `tailwind.config.ts` — drop-in token foundation (already in repo)
@@ -24,12 +25,14 @@ Reference assets:
 These must clear before Phase 1 can merge to main. Phase 0 work can proceed on the branch in parallel.
 
 ### Blocker 1 — ADR-001 deploy target ambiguity
+
 **Status:** OPEN. `vercel.json` and `wrangler.toml` both present. Cloudflare GitHub Action deploys on push to main.
 **Required:** Decide Vercel or Cloudflare Pages. Decommission losing infra. Write `docs/adr/ADR-001-deploy-target.md`.
 **Why blocking:** Reskin pushes will trigger preview deploys. Without resolution we chase two preview URLs and risk env var drift.
 **Owner:** Slim.
 
 ### Blocker 2 — Husky / lint compatibility check
+
 **Status:** UNVERIFIED. New `tailwind.config.ts` adds many custom utilities (`bg-glass-base`, `animate-fab-pulse`, `text-h2`, etc.).
 **Required:** Run `npm run lint && npm run build` on Mac Studio after Phase 0. Confirm zero new errors.
 **Why blocking:** Pitfall 2 — ESLint strict failures break Cloudflare/Vercel builds. We catch it locally now or we catch it in CI later.
@@ -47,6 +50,7 @@ Four phases plus Phase 0 foundation. One PR per phase. Each phase merges before 
 Drop in the design system. App still looks identical to production after this merges; only the toolkit is in place.
 
 **Tasks:**
+
 1. Replace `tailwind.config.ts` at repo root with the Hearth version
 2. Create `docs/design/` directory
 3. Add `docs/design/hearth-prototype.html` (reference only, not served)
@@ -59,6 +63,7 @@ Drop in the design system. App still looks identical to production after this me
 10. Push, open PR, verify Cloudflare preview builds
 
 **Acceptance criteria:**
+
 - [ ] `tailwind.config.ts` extends with cream, linen, ink, brown, leaf, ember, rust, gold colors
 - [ ] Three font families registered: Playfair Display, Lora, Inter
 - [ ] Custom keyframes registered: fab-pulse, macro-bounce, drift-up, dot-pulse
@@ -80,17 +85,20 @@ Drop in the design system. App still looks identical to production after this me
 Lowest-stakes screens. Establish the aesthetic on flows that can be tested without auth.
 
 **Screens redesigned:**
+
 1. `/login` — splash particle convergence, staggered title reveal, form drift-up
 2. `/signup` — invite code field gets gold accent treatment
 3. `/auth/reset` — calmest screen, single input + CTA
 4. `/demo` — 4-step ribbon, step-aware copy, demo-cta-row
 
 **Components introduced (build first, before screens):**
+
 - Button (primary, secondary, ghost)
 - Input + InputLabel
 - StepRibbon (demo only)
 
 **Tasks:**
+
 1. Build base components in `src/components/ui/` per `component-specs.md`
 2. Reskin `src/app/login/page.tsx`
 3. Reskin `src/app/signup/page.tsx`
@@ -102,6 +110,7 @@ Lowest-stakes screens. Establish the aesthetic on flows that can be tested witho
 9. Update `docs/architecture/ui.md` with the new Button/Input/StepRibbon patterns
 
 **Acceptance criteria:**
+
 - [ ] All 4 screens visually match `docs/design/hearth-prototype.html` (mobile + desktop where applicable)
 - [ ] Particle splash plays on first session only (sessionStorage flag) — see decision log entry below
 - [ ] Login form preserves existing copy: "A meditative space to organize your recipes and simplify your kitchen workflow."
@@ -115,6 +124,7 @@ Lowest-stakes screens. Establish the aesthetic on flows that can be tested witho
 - [ ] Cloudflare preview deploy: visual diff vs hearth-prototype.html is acceptable
 
 **Decision log entry needed during this phase:**
+
 - **First-session-only particle splash.** Per Slim's pushback in build session, splash plays once per session via `sessionStorage`, subsequent logins use a quieter fade-only intro. Document in `docs/adr/ADR-003-login-splash-frequency.md`.
 
 **Estimated effort:** 4-6 hours.
@@ -125,12 +135,19 @@ Lowest-stakes screens. Establish the aesthetic on flows that can be tested witho
 
 **PR title:** `feat(design): reskin Recipe Detail with Hearth aesthetic`
 
+> **🚧 BLOCKER — touch-target sizing must be resolved before this phase starts.**
+> The `ServingsScaler` spec in `docs/design/component-specs.md:170` calls for `w-8 h-8` (32px) buttons. iOS Human Interface Guidelines mandate 44×44pt minimum. The existing IngredientsTab buttons at 36px already broke for Julie on her phone (TASK-013, surfaced 2026-04-29). Shipping Phase 2 as currently specced would deploy a _worse_ version of that bug.
+>
+> Architect must decide before Phase 2 begins: (1) override the spec to use `w-11 h-11` (44px) buttons, (2) keep the visual 32px circle but extend the hit area with invisible padding/`::before`, or (3) replace the +/- pattern with a native stepper input on mobile. Decision should be captured in an ADR or Phase 2 amendment to this plan, and applied consistently across `ServingsScaler`, `IngredientList` qty controls, and any other +/- pattern.
+
 Highest component density. Build this second so the rest of the app inherits the heaviest lifting.
 
 **Screens redesigned:**
+
 - `/recipe/[slug]` — hero, meta block, stat row, scaler, tab bar, all 3 tab contents
 
 **Components introduced:**
+
 - Card
 - Chip
 - StatRow
@@ -144,6 +161,7 @@ Highest component density. Build this second so the rest of the app inherits the
 - ErrorState
 
 **Tasks:**
+
 1. Build the 11 new components in `src/components/ui/` and `src/components/recipe/`
 2. Reskin `src/app/recipe/[slug]/page.tsx`
 3. Wire up live servings scaler with crossfade animation
@@ -156,6 +174,7 @@ Highest component density. Build this second so the rest of the app inherits the
 10. Update `docs/architecture/ui.md` with all new component patterns
 
 **Acceptance criteria:**
+
 - [ ] Recipe Detail visually matches `docs/design/hearth-prototype.html`
 - [ ] Servings scaler is live (no Apply button)
 - [ ] Servings scaler crossfades quantity values over 200ms
@@ -181,6 +200,7 @@ Highest component density. Build this second so the rest of the app inherits the
 Most components already exist after Phase 2. This phase is mostly assembly.
 
 **Screens redesigned:**
+
 - `/` (Recipe Gallery) — uses Card, RecipeCard, Chip
 - `/food-log` — uses WeekStrip, MealCard, MacroGrid, LogMealSheet
 - `/weekly` — uses BarChart, MacroGrid, Card
@@ -188,6 +208,7 @@ Most components already exist after Phase 2. This phase is mostly assembly.
 - `/settings` — uses Card, ListRow
 
 **New components introduced:**
+
 - RecipeCard
 - WeekStrip
 - MealCard
@@ -197,6 +218,7 @@ Most components already exist after Phase 2. This phase is mostly assembly.
 - EmptyState
 
 **Tasks:**
+
 1. Build the 7 new components
 2. Reskin Gallery first (most-visited screen)
 3. Reskin Food Log + LogMealSheet bottom sheet
@@ -208,6 +230,7 @@ Most components already exist after Phase 2. This phase is mostly assembly.
 9. Update `progress.md`
 
 **Acceptance criteria:**
+
 - [ ] Gallery grid is 2-col mobile, 4-col desktop
 - [ ] RecipeCards lift on hover (desktop only, translate-y -2px)
 - [ ] Filter chips work and active state is visible
@@ -234,11 +257,13 @@ Most components already exist after Phase 2. This phase is mostly assembly.
 Final polish phase. Chat ships last because it overlays every other screen.
 
 **Components introduced:**
+
 - ChatDrawer (frosted-glass slide-up overlay)
 - Web search loading indicator (3 sequential dots)
 - LoadingState variants per screen
 
 **Tasks:**
+
 1. Build ChatDrawer overlay component
 2. Wire up to ChatFAB on every screen except Login
 3. Quick-prompt chips at bottom of drawer
@@ -252,6 +277,7 @@ Final polish phase. Chat ships last because it overlays every other screen.
 11. Final QA pass on every screen, mobile + desktop
 
 **Acceptance criteria:**
+
 - [ ] ChatDrawer slides up over 320ms ease-hearth from bottom
 - [ ] Backdrop fades in to 0.32 opacity
 - [ ] Drag-to-dismiss enabled
@@ -297,18 +323,18 @@ Inherits the project DOD from `CLAUDE.md` Section 6. Every phase PR must satisfy
 
 (Detailed in `docs/design/component-specs.md` and `tailwind.config.ts` keyframes.)
 
-| Interaction | Duration | Easing | Trigger |
-|---|---|---|---|
-| Login particles | 1.4s | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Page load (first session only) |
-| Login title drift-up | 600ms | ease-hearth | Staggered after particles |
-| FAB pulse | 1.6s × 2 | ease-in-out | 3.5s after page settle |
-| Servings crossfade | 200ms | linear | On scaler click |
-| Macro bounce | 180ms | ease-out | On value change |
-| Tab bar frost | 240ms | ease-hearth | On scroll past hero |
-| Sheet slide | 320ms | ease-hearth | Open/close |
-| Drawer slide | 320ms | ease-hearth | Open/close |
-| Chat dot pulse | 1800ms loop | ease-in-out | While searching |
-| Card hover lift | 180ms | ease | Hover (desktop only) |
+| Interaction          | Duration    | Easing                           | Trigger                        |
+| -------------------- | ----------- | -------------------------------- | ------------------------------ |
+| Login particles      | 1.4s        | `cubic-bezier(0.2, 0.8, 0.2, 1)` | Page load (first session only) |
+| Login title drift-up | 600ms       | ease-hearth                      | Staggered after particles      |
+| FAB pulse            | 1.6s × 2    | ease-in-out                      | 3.5s after page settle         |
+| Servings crossfade   | 200ms       | linear                           | On scaler click                |
+| Macro bounce         | 180ms       | ease-out                         | On value change                |
+| Tab bar frost        | 240ms       | ease-hearth                      | On scroll past hero            |
+| Sheet slide          | 320ms       | ease-hearth                      | Open/close                     |
+| Drawer slide         | 320ms       | ease-hearth                      | Open/close                     |
+| Chat dot pulse       | 1800ms loop | ease-in-out                      | While searching                |
+| Card hover lift      | 180ms       | ease                             | Hover (desktop only)           |
 
 ---
 
@@ -326,14 +352,14 @@ Inherits the project DOD from `CLAUDE.md` Section 6. Every phase PR must satisfy
 
 ## 📊 OVERALL ESTIMATE
 
-| Phase | Hours (low) | Hours (high) |
-|---|---|---|
-| 0 — Foundation | 0.5 | 2 |
-| 1 — Public surface | 4 | 6 |
-| 2 — Recipe Detail | 8 | 12 |
-| 3 — Authenticated app | 6 | 9 |
-| 4 — Polish | 4 | 6 |
-| **Total** | **22.5** | **35** |
+| Phase                 | Hours (low) | Hours (high) |
+| --------------------- | ----------- | ------------ |
+| 0 — Foundation        | 0.5         | 2            |
+| 1 — Public surface    | 4           | 6            |
+| 2 — Recipe Detail     | 8           | 12           |
+| 3 — Authenticated app | 6           | 9            |
+| 4 — Polish            | 4           | 6            |
+| **Total**             | **22.5**    | **35**       |
 
 Realistic ship window: **3 to 5 working days** at focused-block pace, longer if interrupted.
 
@@ -348,4 +374,4 @@ Realistic ship window: **3 to 5 working days** at focused-block pace, longer if 
 
 ---
 
-*End of task plan. Read `progress.md` for completed work, `CLAUDE.md` for engineering laws.*
+_End of task plan. Read `progress.md` for completed work, `CLAUDE.md` for engineering laws._
