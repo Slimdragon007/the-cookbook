@@ -12,48 +12,13 @@ import {
   toGrams,
   type PortionUnit,
 } from "@/lib/unit-conversions";
+import MacroGrid, { type MacroValues } from "@/components/ui/MacroGrid";
 
 interface Props {
   ingredients: Ingredient[];
   scale: number;
   servings: number;
   totalBatchWeightG: number | null;
-}
-
-const MACRO_FIELDS = [
-  { key: "calories", label: "Calories", unit: "" },
-  { key: "protein", label: "Protein", unit: "g" },
-  { key: "carbs", label: "Carbs", unit: "g" },
-  { key: "fat", label: "Fat", unit: "g" },
-] as const;
-
-type MacroValues = Record<(typeof MACRO_FIELDS)[number]["key"], number | null>;
-
-function MacroGrid({ values }: { values: MacroValues }) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {MACRO_FIELDS.map(({ key, label, unit }) => {
-        const v = values[key];
-        const display =
-          v === null ? "—" : v % 1 === 0 ? String(Math.round(v)) : v.toFixed(1);
-        return (
-          <div key={key} className="bg-linen rounded p-4">
-            <div className="font-sans text-[11px] tracking-[0.08em] uppercase text-ink-mute font-semibold mb-1.5">
-              {label}
-            </div>
-            <div className="font-sans text-2xl font-semibold text-ink tabular-nums">
-              {display}
-              {unit && v !== null && (
-                <span className="text-[13px] text-ink-mute font-medium ml-0.5">
-                  {unit}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 export default function NutritionTab({
