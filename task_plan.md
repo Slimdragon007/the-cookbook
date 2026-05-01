@@ -4,7 +4,7 @@
 
 ## Active
 
-_(none — TASK-015 closed; see Done.)_
+- **TASK-017 — Hearth reskin Phase 3 (Authenticated app), partial.** Two slices done 2026-04-30: Gallery (`feat/hearth-gallery` commit `298aa63`) and Food Log (`feat/hearth-food-log` commit `78ddb5e`), both rolled into a single PR off the post-PR-#22 main. **Slice A — Gallery:** RecipeCard reskinned per spec §4 (linen rounded card, 4:3/16:11 image, Playfair title, Lora meta, gold rating, switched div-onclick → button so keyboard nav works); RecipeGrid (Hearth search, Chip filter row per spec §2, Playfair "Your recipes" h2, 2-col mobile / 4-col desktop grid, two EmptyState variants per spec §17 with verbatim warm copy); home `/` page (drops gradient text for Playfair ink h1 + Lora subtitle, max-w-7xl wrapper, refreshed skeleton). **Slice B — Food Log:** MacroGrid extracted from NutritionTab to `src/components/ui/MacroGrid.tsx` as shared primitive (3rd use threshold hit: NutritionTab + Food Log + future Weekly), NutritionTab refactored to import it (no behavior change); FoodLogForm reskinned (bg-linen surface, Hearth Input/Button primitives, MealCard pattern for entries, EmptyState per spec §17); /food-log page header reskinned. All FoodLogForm logic preserved (calculateMacros, optimistic SWR mutation). **Remaining Phase 3 surfaces (separate work):** `/weekly` (BarChart + MacroGrid + Card), `/admin/import` (6 state cards), `/settings`. **Behaviorally deferred:** WeekStrip component, LogMealSheet bottom-sheet (drag-gesture lib needed). Lint/tsc clean; vitest 111/118 (7 pre-existing skips). Browser smoke deferred to post-merge production check.
 
 ## Backlog
 

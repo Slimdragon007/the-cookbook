@@ -3,9 +3,20 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import { Recipe } from "@/lib/types";
-import { calculatePortionMacros, perServingMacros, sumIngredientMacros } from "@/lib/macros";
-import { PORTION_UNITS, toGrams, type PortionUnit } from "@/lib/unit-conversions";
-import { Loader2 } from "lucide-react";
+import {
+  calculatePortionMacros,
+  perServingMacros,
+  sumIngredientMacros,
+} from "@/lib/macros";
+import {
+  PORTION_UNITS,
+  toGrams,
+  type PortionUnit,
+} from "@/lib/unit-conversions";
+import { Loader2, UtensilsCrossed } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input, InputLabel } from "@/components/ui/Input";
+import MacroGrid, { type MacroValues } from "@/components/ui/MacroGrid";
 
 interface LogEntry {
   id: string;
@@ -25,14 +36,19 @@ interface LogEntry {
 
 const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"] as const;
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+const selectClass =
+  "w-full px-4 py-3 rounded bg-cream border border-brown-glass font-sans text-[15px] text-ink outline-none transition-colors focus:border-brown";
 
 export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
   const [recipeId, setRecipeId] = useState("");
   const [meal, setMeal] = useState<string>("Lunch");
   const [portionAmount, setPortionAmount] = useState("");
   const [portionUnit, setPortionUnit] = useState<PortionUnit>("servings");
-  const [logDate, setLogDate] = useState(new Date().toISOString().split("T")[0]);
+  const [logDate, setLogDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -44,18 +60,23 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
 
   function calculateMacros() {
     const recipe = recipes.find((r) => r.id === recipeId);
-    if (!recipe) return { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, portion_g: 0 };
+    if (!recipe)
+      return {
+        calories: 0,
+        protein_g: 0,
+        carbs_g: 0,
+        fat_g: 0,
+        portion_g: 0,
+      };
 
     const amount = parseFloat(portionAmount) || 0;
     const servingsCount = recipe.servings ?? 1;
 
-    // Convert user's unit to grams
     const grams = toGrams(amount, portionUnit, {
       totalBatchWeightG: recipe.totalBatchWeightG,
       servings: servingsCount,
     });
 
-    // If servings unit with no batch weight, use per-serving math scaled by amount
     if (grams === null && portionUnit === "servings") {
       const totals = sumIngredientMacros(recipe.ingredients);
       const perServing = perServingMacros(totals, servingsCount);
@@ -73,7 +94,7 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
       recipe.ingredients,
       resolvedGrams,
       recipe.totalBatchWeightG,
-      servingsCount
+      servingsCount,
     );
 
     return {
@@ -93,10 +114,9 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
     setMessage("");
 
     const macros = calculateMacros();
-    const selectedRecipe = recipes.find(r => r.id === recipeId);
+    const selectedRecipe = recipes.find((r) => r.id === recipeId);
     const displayAmount = parseFloat(portionAmount) || 0;
 
-    // Optimistic update — add entry immediately
     const optimisticEntry: LogEntry = {
       id: `temp-${Date.now()}`,
       recipe_id: recipeId,
@@ -116,7 +136,7 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
     mutate(
       `/api/log-meal?date=${logDate}`,
       { entries: [optimisticEntry, ...entries] },
-      false
+      false,
     );
 
     const res = await fetch("/api/log-meal", {
@@ -140,161 +160,182 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
     setSaving(false);
 
     if (responseData.success) {
-      setMessage("Logged!");
+      setMessage("Logged.");
       setPortionAmount("");
-      // Revalidate to get the real entry with server-generated ID
       mutate(`/api/log-meal?date=${logDate}`);
     } else {
       setMessage("Couldn't save. Please try again.");
-      // Revert optimistic update
       mutate(`/api/log-meal?date=${logDate}`);
     }
   }
 
-  const todayTotal = entries.reduce(
+  // Day total in MacroValues shape so we can pass it directly to <MacroGrid>.
+  const todayTotal: MacroValues = entries.reduce<MacroValues>(
     (acc, e) => ({
-      cal: acc.cal + (e.calories || 0),
-      p: acc.p + (e.protein_g || 0),
-      c: acc.c + (e.carbs_g || 0),
-      f: acc.f + (e.fat_g || 0),
+      calories: (acc.calories ?? 0) + (e.calories || 0),
+      protein: (acc.protein ?? 0) + (e.protein_g || 0),
+      carbs: (acc.carbs ?? 0) + (e.carbs_g || 0),
+      fat: (acc.fat ?? 0) + (e.fat_g || 0),
     }),
-    { cal: 0, p: 0, c: 0, f: 0 }
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
+
+  const isToday = logDate === new Date().toISOString().split("T")[0];
 
   return (
     <div>
       {/* Log form */}
-      <form onSubmit={handleSubmit} className="glass-strong rounded-[2rem] p-6 mb-8">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-linen rounded shadow-lift-sm p-6 mb-8"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-amber-700 uppercase tracking-[0.2em] pl-1">Recipe</label>
+            <InputLabel htmlFor="log-recipe">Recipe</InputLabel>
             <select
+              id="log-recipe"
               value={recipeId}
               onChange={(e) => setRecipeId(e.target.value)}
-              className="w-full h-14 px-5 rounded-2xl glass-input text-slate-800 text-[15px] font-bold"
+              className={selectClass}
               required
             >
-              <option value="">Select a recipe...</option>
+              <option value="">Select a recipe…</option>
               {recipes.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-amber-700 uppercase tracking-[0.2em] pl-1">Meal</label>
+            <InputLabel htmlFor="log-meal">Meal</InputLabel>
             <select
+              id="log-meal"
               value={meal}
               onChange={(e) => setMeal(e.target.value)}
-              className="w-full h-14 px-5 rounded-2xl glass-input text-slate-800 text-[15px] font-bold"
+              className={selectClass}
             >
               {MEALS.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-amber-700 uppercase tracking-[0.2em] pl-1">Portion</label>
+            <InputLabel htmlFor="log-portion">Portion</InputLabel>
             <div className="flex gap-2">
-              <input
+              <Input
+                id="log-portion"
                 type="number"
                 inputMode="decimal"
                 step="0.25"
                 value={portionAmount}
                 onChange={(e) => setPortionAmount(e.target.value)}
                 placeholder={portionUnit === "servings" ? "1" : "0"}
-                className="flex-1 h-14 px-5 rounded-2xl glass-input text-slate-800 text-[15px] font-bold placeholder:text-slate-300"
+                className="flex-1"
                 required
               />
               <select
                 value={portionUnit}
                 onChange={(e) => setPortionUnit(e.target.value as PortionUnit)}
-                className="h-14 px-4 rounded-2xl glass-input text-slate-800 text-[15px] font-bold"
+                className={`${selectClass} w-auto`}
+                aria-label="Portion unit"
               >
                 {PORTION_UNITS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-amber-700 uppercase tracking-[0.2em] pl-1">Date</label>
+            <InputLabel htmlFor="log-date">Date</InputLabel>
             <input
+              id="log-date"
               type="date"
               value={logDate}
               onChange={(e) => setLogDate(e.target.value)}
-              className="w-full h-14 px-5 rounded-2xl glass-input text-slate-800 text-[15px] font-bold"
+              className={selectClass}
             />
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
             type="submit"
             disabled={saving || !recipeId || !portionAmount}
-            className="px-8 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-2xl font-bold transition-all disabled:opacity-50 shadow-[0_8px_24px_rgba(196,149,46,0.3)] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? "Saving..." : "Log Meal"}
-          </button>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {saving ? "Saving…" : "Log meal"}
+          </Button>
           {message && (
-            <span className="text-sm text-amber-700 font-bold">{message}</span>
+            <span className="font-serif italic text-sm text-ink-soft">
+              {message}
+            </span>
           )}
         </div>
       </form>
 
-      {/* Day totals */}
+      {/* Day total — uses extracted MacroGrid. */}
       {entries.length > 0 && (
-        <div className="glass rounded-[2rem] px-6 py-5 mb-8">
-          <h3 className="text-sm font-bold text-slate-800 mb-4">Day Total</h3>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { label: "Calories", value: todayTotal.cal, color: "text-amber-700", bg: "bg-amber-50" },
-              { label: "Protein", value: `${todayTotal.p}g`, color: "text-emerald-600", bg: "bg-emerald-50" },
-              { label: "Carbs", value: `${todayTotal.c}g`, color: "text-orange-600", bg: "bg-orange-50" },
-              { label: "Fat", value: `${todayTotal.f}g`, color: "text-purple-600", bg: "bg-purple-50" },
-            ].map(({ label, value, color, bg }) => (
-              <div key={label} className={`${bg} rounded-2xl p-3 text-center`}>
-                <div className={`text-lg font-bold ${color}`}>{value}</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <section className="mb-8">
+          <h3 className="font-sans text-xs font-semibold tracking-[0.06em] uppercase text-brown mb-3">
+            Day total
+          </h3>
+          <MacroGrid values={todayTotal} />
+        </section>
       )}
 
       {/* Entries */}
-      <h3 className="text-lg font-bold text-slate-800 mb-4">
-        {logDate === new Date().toISOString().split("T")[0] ? "Today" : logDate}
+      <h3 className="font-display text-xl font-semibold text-ink mb-4">
+        {isToday ? "Today" : logDate}
       </h3>
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+          <Loader2 className="w-5 h-5 text-brown animate-spin" />
         </div>
       ) : entries.length === 0 ? (
-        <p className="text-sm text-slate-400 font-medium">No meals logged yet.</p>
+        // EmptyState — spec §17 Food Log variant.
+        <div className="text-center py-12 px-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-linen text-brown mb-4">
+            <UtensilsCrossed size={28} aria-hidden />
+          </div>
+          <h4 className="font-display font-semibold text-lg text-ink mb-2">
+            Nothing logged{isToday ? " today" : ""}, yet.
+          </h4>
+          <p className="font-serif text-sm text-ink-mute leading-relaxed max-w-[260px] mx-auto">
+            Pick a recipe above and tap <em>Log meal</em> when you eat.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <ul className="space-y-3">
           {entries.map((entry) => (
-            <div
+            <li
               key={entry.id}
-              className="flex items-center justify-between glass p-5 rounded-[1.75rem]"
+              className="flex items-center gap-4 bg-linen rounded shadow-lift-sm p-4 sm:p-5"
             >
               <div className="min-w-0 flex-1">
-                <span className="text-[15px] font-bold text-slate-800 truncate block">
+                <div className="font-display text-base font-semibold text-ink truncate">
                   {entry.recipes?.name || "Unknown"}
-                </span>
-                <span className="text-xs text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded-full">{entry.meal}</span>
+                </div>
+                <div className="font-sans text-xs text-ink-mute mt-0.5 uppercase tracking-[0.08em]">
+                  {entry.meal}
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-sm font-bold text-slate-800">
+              <div className="text-right shrink-0">
+                <div className="font-sans text-sm font-medium text-ink-soft tabular-nums">
                   {entry.portion_amount && entry.portion_unit
                     ? `${entry.portion_amount} ${entry.portion_unit}`
                     : `${entry.portion_g}g`}
-                </span>
-                <span className="text-xs text-amber-700 font-bold ml-2">{entry.calories} cal</span>
+                </div>
+                <div className="font-sans text-sm font-semibold text-brown tabular-nums">
+                  {entry.calories} cal
+                </div>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
