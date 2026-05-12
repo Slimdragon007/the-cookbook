@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Julie's Cookbook — Editorial mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --paper: #f8f4ed;
+    --ink: #1c1a17;
+    --muted: #6b655c;
+    --rule: #d8d0c2;
+    --accent: #9a6b3a;
+    --sage: #7a8a6e;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif { font-family: 'Cormorant Garamond', serif; }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding: 24px 48px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+  }
+  .logo em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  nav { display: flex; gap: 32px; }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  nav a:hover { color: var(--ink); }
+  nav a.active { color: var(--ink); border-bottom: 1px solid var(--accent); padding-bottom: 4px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 64px 48px; }
+
+  .masthead {
+    text-align: center;
+    margin-bottom: 64px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .kicker {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .masthead h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 64px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .masthead h1 em { font-style: italic; color: var(--accent); }
+  .masthead .sub {
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto;
+    font-size: 16px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 64px;
+    margin-bottom: 96px;
+    align-items: center;
+  }
+  .hero-img {
+    aspect-ratio: 4/3;
+    background-size: cover;
+    background-position: center;
+    background-image: url('https://images.unsplash.com/photo-1547592180-85f173990554?w=900&q=80');
+  }
+  .hero-text .kicker { color: var(--sage); }
+  .hero-text h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 48px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero-text p {
+    color: var(--muted);
+    margin-bottom: 32px;
+    font-size: 17px;
+  }
+  .stats { display: flex; gap: 40px; margin-bottom: 32px; }
+  .stat .label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .stat .value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 500;
+  }
+  .btn {
+    display: inline-block;
+    border: 1px solid var(--ink);
+    padding: 14px 32px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 40px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section-head h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 32px;
+  }
+  .section-head .count {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px 32px;
+  }
+  .card { cursor: pointer; }
+  .card-img {
+    aspect-ratio: 4/3;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 16px;
+    transition: opacity 0.3s;
+  }
+  .card:hover .card-img { opacity: 0.85; }
+  .card .tag {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .card h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 26px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .card .meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .card .meta span:not(:last-child)::after {
+    content: '·';
+    margin-left: 16px;
+    color: var(--rule);
+  }
+
+  footer {
+    margin-top: 96px;
+    padding: 32px 48px;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 32px; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .masthead h1 { font-size: 44px; }
+  }
+  @media (max-width: 600px) {
+    header { padding: 20px 24px; flex-direction: column; gap: 16px; }
+    .container { padding: 40px 24px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Julie's <em>Cookbook</em></div>
+  <nav>
+    <a href="#" class="active">Recipes</a>
+    <a href="#">Add</a>
+    <a href="#">Food Log</a>
+    <a href="#">Summary</a>
+    <a href="#">Profile</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <section class="masthead">
+    <div class="kicker">May · Spring Issue</div>
+    <h1>The <em>family</em> kitchen, in print.</h1>
+    <p class="sub">A growing collection of the recipes we actually cook — with the macros figured out, the timing tested, and the notes left by the people who made them.</p>
+  </section>
+
+  <section class="hero">
+    <div class="hero-img"></div>
+    <div class="hero-text">
+      <div class="kicker">Featured tonight</div>
+      <h2>Best Goulash</h2>
+      <p>Slow-simmered beef with sweet paprika, caraway, and enough onion to make the kitchen smell like a Sunday in Budapest. The kind of dinner that earns its place on the bookshelf.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Per serving</div>
+          <div class="value">480 cal</div>
+        </div>
+        <div class="stat">
+          <div class="label">Protein</div>
+          <div class="value">38 g</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total time</div>
+          <div class="value">1h 30m</div>
+        </div>
+      </div>
+      <a href="#" class="btn">Open recipe</a>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h3>From the bookshelf</h3>
+    <div class="count">37 recipes</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=80')"></div>
+      <div class="tag">Thai · Dairy-free</div>
+      <h4>Coconut Curry with Lime</h4>
+      <div class="meta"><span>520 cal</span><span>32g protein</span><span>45 min</span></div>
+    </div>
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=600&q=80')"></div>
+      <div class="tag">American · High protein</div>
+      <h4>Sheet Pan Lemon Chicken</h4>
+      <div class="meta"><span>410 cal</span><span>44g protein</span><span>1 hr</span></div>
+    </div>
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80')"></div>
+      <div class="tag">Vegetarian · GF</div>
+      <h4>Roasted Veggie Bowl</h4>
+      <div class="meta"><span>380 cal</span><span>14g protein</span><span>35 min</span></div>
+    </div>
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80')"></div>
+      <div class="tag">American · Comfort</div>
+      <h4>Slow-Cooker Pot Roast</h4>
+      <div class="meta"><span>540 cal</span><span>42g protein</span><span>6 hr</span></div>
+    </div>
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=600&q=80')"></div>
+      <div class="tag">Dessert</div>
+      <h4>Brown-Butter Cookies</h4>
+      <div class="meta"><span>220 cal</span><span>3g protein</span><span>30 min</span></div>
+    </div>
+    <div class="card">
+      <div class="card-img" style="background-image:url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80')"></div>
+      <div class="tag">Italian · Family</div>
+      <h4>Cast-Iron Margherita</h4>
+      <div class="meta"><span>460 cal</span><span>22g protein</span><span>55 min</span></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Julie's Cookbook — printed at home, served at the table.</footer>
+
+</body>
+</html>
