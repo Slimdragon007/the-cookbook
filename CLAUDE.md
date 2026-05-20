@@ -32,7 +32,7 @@
 | Hosting   | Cloudflare Pages    | —       | `@cloudflare/next-on-pages`, deployed via GH Action on push to `main` (ADR-001)                                                                                                   |
 | AI        | Anthropic SDK       | 0.78    | `claude-sonnet-4-20250514` for chat                                                                                                                                               |
 | Storage   | Cloudinary          | —       | Image hosting                                                                                                                                                                     |
-| Tests     | Vitest + Playwright | —       | 93 unit (86 pass / 7 pre-existing skips) + 28 e2e                                                                                                                                 |
+| Tests     | Vitest + Playwright | —       | 171 unit (164 pass / 7 pre-existing skips) + 28 e2e                                                                                                                               |
 | Hooks     | Husky               | —       | Pre-commit lint + tsc                                                                                                                                                             |
 
 Full env var contract: see `@docs/REFERENCE.md`.

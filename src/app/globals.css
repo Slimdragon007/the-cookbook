@@ -157,9 +157,9 @@ select.glass-input option {
 
 /* Smooth page transitions */
 main {
-  animation: fadeIn 0.2s ease-out;
+  animation: main-fade-in 0.2s ease-out;
 }
-@keyframes fadeIn {
+@keyframes main-fade-in {
   from {
     opacity: 0;
     transform: translateY(4px);
