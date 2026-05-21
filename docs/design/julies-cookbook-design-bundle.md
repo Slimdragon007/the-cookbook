@@ -510,11 +510,7 @@ Hearth shipped clean (Phase 1 → Phase 3 closed 2026-04-30) but read as "B2B Sa
 
 The Hearth primitives (`Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`) stay; their tokens are retoned but the shape and props are unchanged.
 
-New primitives added in TASK-018:
-
-- **`Surface`** (`src/components/ui/Surface.tsx`) — `treatment="bordered" | "glass" | "flat"` card wrapper.
-- **`Tag`** (`src/components/ui/Tag.tsx`) — pill chip, `accent` and `active` props.
-- **`MacroPill`** (`src/components/ui/MacroPill.tsx`) — atomic macro display for inline use (label + mono value + unit).
+**No new primitives.** `Surface`, `Tag`, and `MacroPill` were shipped speculatively early in TASK-018 then deleted per YAGNI after the 11 reskinned surfaces landed without importing them (the YAGNI cleanup was lost in PR #29's squash-merge and re-applied as commit `a39e95a` on TASK-023's branch). The inline patterns below cover everything those primitives would have wrapped — `bg-card border border-rule shadow-lift-sm` for surfaces, `bg-accent-soft text-accent-ink` pill spans for tags, `font-mono tabular-nums` for macro values. If a fourth-or-later call site appears that genuinely shares the shape, _then_ extract a primitive.
 
 ## Inline patterns (no new files)
 
@@ -536,20 +532,21 @@ Asterisk superscript + footnote block below the ingredient list. Don't inline co
 
 ## Migration status
 
-| Surface                                                                                            | Phase 1 (TASK-018) | Notes                                                           |
-| -------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------- |
-| Foundation: `tailwind.config.ts`, `globals.css`, `layout.tsx`, `next/font`                         | ✅ Done            | Single-PR token swap.                                           |
-| UI primitives: `Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`                   | ✅ Retoned         |                                                                 |
-| New primitives: `Surface`, `Tag`, `MacroPill`                                                      | ✅ Added           |                                                                 |
-| `/` (gallery): `(main)/page.tsx`, `RecipeCard`, `RecipeGrid`                                       | ✅ Done            |                                                                 |
-| `/recipe/[id]`: `RecipeTabs`, `IngredientsTab`, `InstructionsTab`, `NutritionTab`, `RecipeActions` | ✅ Done            |                                                                 |
-| `MainNav`                                                                                          | ⏳ TASK-019        | Still pre-Hearth amber/slate; visually broken under new tokens. |
-| `/log` + `FoodLogForm` + `MealCard`                                                                | ⏳ TASK-020        |                                                                 |
-| `/summary` + `WeeklySummary`                                                                       | ⏳ TASK-021        |                                                                 |
-| `/grocery-list` + `GroceryListBuilder`                                                             | ⏳ TASK-022        |                                                                 |
-| `ChatDrawer` + `ChatFAB` (→ "Kitchen line")                                                        | ⏳ TASK-023        |                                                                 |
-| `/login`, `/signup`, `/auth/*`, `/demo`                                                            | ⏳ TASK-024        |                                                                 |
-| `/add-recipe`, `/profile`                                                                          | ⏳ TASK-025        |                                                                 |
-| Tweaks panel + multi-palette                                                                       | ⏳ TASK-026        | Persistence design first.                                       |
+> **Paper Editorial reskin complete as of 2026-05-20.** TASK-018 through TASK-025 all landed on `main` between 2026-05-20 and 2026-05-21 — every production surface is on Paper Editorial tokens with Instrument Serif italic + Inter + JetBrains Mono typography. Only TASK-026 (Tweaks panel + multi-palette runtime switcher) remains in flight: PR A (migration) and PR B (provider + Tailwind `var()` colors) merged on 2026-05-21; PR C (`/settings` UI + Voice/Paper font + grain assets) queued.
+
+| Surface                                                                                            | Status      | Notes                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundation: `tailwind.config.ts`, `globals.css`, `layout.tsx`, `next/font`                         | ✅ TASK-018 | Single-PR token swap. Token colors later rewritten as `rgb(var(--*) / <alpha-value>)` in TASK-026 PR B so the runtime palette switcher can override CSS vars without losing slash-opacity utilities. |
+| UI primitives: `Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`                   | ✅ TASK-018 | Retoned.                                                                                                                                                                                             |
+| `/` (gallery): `(main)/page.tsx`, `RecipeCard`, `RecipeGrid`                                       | ✅ TASK-018 |                                                                                                                                                                                                      |
+| `/recipe/[id]`: `RecipeTabs`, `IngredientsTab`, `InstructionsTab`, `NutritionTab`, `RecipeActions` | ✅ TASK-018 |                                                                                                                                                                                                      |
+| `MainNav`                                                                                          | ✅ TASK-019 |                                                                                                                                                                                                      |
+| `/log` + `FoodLogForm` + `MealCard`                                                                | ✅ TASK-020 |                                                                                                                                                                                                      |
+| `/summary` + `WeeklySummary`                                                                       | ✅ TASK-021 | Weekly bar-chart visualization deferred to TASK-021.1.                                                                                                                                               |
+| `/grocery-list` + `GroceryListBuilder`                                                             | ✅ TASK-022 |                                                                                                                                                                                                      |
+| `ChatDrawer` + `ChatFAB` (→ "Kitchen line")                                                        | ✅ TASK-023 |                                                                                                                                                                                                      |
+| `/login`, `/signup`, `/auth/*`, `/demo`                                                            | ✅ TASK-024 |                                                                                                                                                                                                      |
+| `/add-recipe`, `/profile`                                                                          | ✅ TASK-025 |                                                                                                                                                                                                      |
+| Tweaks panel + multi-palette                                                                       | ⏳ TASK-026 | PR A + PR B merged 2026-05-21; PR C (settings UI + Voice/Paper fonts + grain SVGs) queued.                                                                                                           |
 
 _End of Section 3._
