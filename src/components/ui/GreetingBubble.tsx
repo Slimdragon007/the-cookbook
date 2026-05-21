@@ -63,6 +63,13 @@ export function GreetingBubble({ initial, message }: GreetingBubbleProps) {
 // Helper: build the dynamic message given today's intake. Exported so the
 // caller (server component in Library page) computes message text from
 // fetched data and passes it in.
+//
+// Branch order matters: the zero-logged check must come FIRST. Otherwise
+// on a default 2100 kcal target, calLeft = 2100 > 400 wins immediately and
+// the user sees "you have 2100 kcal left for the day" first thing in the
+// morning — which is technically true but reads as goading. Fix per Codex
+// P1 finding on PR #41 (2026-05-21): first-of-day users should hear the
+// gentler "Nothing logged yet" branch when caloriesEatenToday === 0.
 export function buildGreetingMessage(opts: {
   displayName: string;
   caloriesEatenToday: number;
@@ -76,14 +83,14 @@ export function buildGreetingMessage(opts: {
     (date ?? new Date().toISOString().split("T")[0]) + "T12:00:00",
   ).toLocaleDateString("en-US", { weekday: "long" });
 
+  if (caloriesEatenToday === 0) {
+    return `Happy ${dayName}, ${displayName}. Nothing logged yet today — what kicked it off?`;
+  }
   if (calLeft > 400) {
     return `Happy ${dayName}, ${displayName}. You have about ${calLeft} kcal left for the day. What are we cooking tonight?`;
   }
   if (calLeft > 0) {
     return `Happy ${dayName}, ${displayName}. Almost there — just ${calLeft} kcal left. One more meal to go!`;
-  }
-  if (caloriesEatenToday === 0) {
-    return `Happy ${dayName}, ${displayName}. Nothing logged yet today — what kicked it off?`;
   }
   return `Happy ${dayName}, ${displayName}. You hit your goal today. Proud of you!`;
 }

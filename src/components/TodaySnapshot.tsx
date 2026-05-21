@@ -58,8 +58,24 @@ interface TodaySnapshotProps {
   displayName: string;
 }
 
+// Local-timezone YYYY-MM-DD formatter. `new Date().toISOString().split("T")[0]`
+// returns the UTC date, which flips to "tomorrow" in US timezones after
+// ~5 PM PT. The Library greeting + Today snapshot need the user's local
+// "today" so meals logged just before midnight stay associated with the
+// correct visual day. Fix per Codex P1 finding on PR #42 (2026-05-21).
+//
+// Server-side log_date storage still uses UTC — full timezone correctness
+// would also require API changes (out of TASK-027 scope; see TASK-028
+// follow-up in the plan addendum).
+function localDateString(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function TodaySnapshot({ displayName }: TodaySnapshotProps) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateString();
   const { data, isLoading } = useSWR(`/api/log-meal?date=${today}`, fetcher, {
     revalidateOnFocus: true,
     dedupingInterval: 5000,

@@ -280,9 +280,18 @@ export default function ChatDrawer({
               <span
                 className="inline-block px-5 py-4 rounded-2xl bg-card border border-rule"
                 aria-live="polite"
-                aria-label={loadingText}
               >
-                <span className="inline-flex items-center gap-1.5">
+                {/* Visually-hidden announceable text. Screen readers
+                    announce content changes inside aria-live regions,
+                    but only when there's text inside — aria-label on the
+                    container does NOT reliably substitute. Putting
+                    loadingText in an sr-only span keeps it visually
+                    invisible (just the three dots show) while still
+                    announcing "Thinking…" or "Searching the web…" to
+                    SR users when loadingText updates. Fix per Codex P2
+                    finding on PR #46 (2026-05-21). */}
+                <span className="sr-only">{loadingText}</span>
+                <span className="inline-flex items-center gap-1.5" aria-hidden>
                   <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-1" />
                   <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-2" />
                   <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-3" />

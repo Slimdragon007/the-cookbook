@@ -20,6 +20,11 @@ interface Props {
   ingredients: Ingredient[];
   scale: number;
   servings: number;
+  /** Recipe's BASE serving count (the value as stored, before the user
+   *  adjusts). Used for the per-serving Ring + macro-split hero so those
+   *  values stay constant when the user scales away from the recipe
+   *  default. Added per Codex P1 finding on PR #43 (2026-05-21). */
+  defaultServings: number | null;
   totalBatchWeightG: number | null;
 }
 
@@ -27,6 +32,7 @@ export default function NutritionTab({
   ingredients,
   scale,
   servings,
+  defaultServings,
   totalBatchWeightG,
 }: Props) {
   const [portionAmount, setPortionAmount] = useState<string>("");
@@ -75,12 +81,20 @@ export default function NutritionTab({
         fat: perServing.fat,
       };
 
-  // Per-serving values for the new Ring + macro-split hero (TASK-027 Phase 3).
-  // Prototype reference: mobile.jsx NutritionBlock lines 410-446.
-  const cal = perServing.calories;
-  const p = perServing.protein;
-  const c = perServing.carbs;
-  const f = perServing.fat;
+  // Per-serving values for the Ring + macro-split hero. MUST be computed
+  // from the recipe's BASE servings, not the user-adjusted servings prop.
+  // Otherwise scaling from 4 → 2 servings would HALVE the per-serving
+  // values displayed (since perServing = totals/servings divides by the
+  // user-adjusted number) AND keep "total kcal" stuck at the original
+  // batch's calories — all three hero numbers go wrong simultaneously.
+  // Fix per Codex P1 finding on PR #43 (2026-05-21). Prototype reference:
+  // mobile.jsx NutritionBlock lines 410-446.
+  const baseServings = defaultServings || 1;
+  const basePerServing = perServingMacros(totals, baseServings);
+  const cal = basePerServing.calories;
+  const p = basePerServing.protein;
+  const c = basePerServing.carbs;
+  const f = basePerServing.fat;
   // Macro split: protein/carbs/fat caloric contribution (4/4/9 kcal per gram).
   const macroCalTotal = p * 4 + c * 4 + f * 9 || 1; // guard /0 with || 1
   const pPct = Math.round(((p * 4) / macroCalTotal) * 100);

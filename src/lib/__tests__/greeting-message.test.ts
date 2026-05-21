@@ -45,22 +45,19 @@ describe("buildGreetingMessage", () => {
   });
 
   it("returns the 'nothing logged yet' branch when zero calories logged", () => {
+    // Codex review fix (PR #41, 2026-05-21): when caloriesEatenToday === 0,
+    // the zero-logged check now runs BEFORE the >400-left check. Without
+    // this ordering, the user would see "you have 2100 kcal left" first
+    // thing in the morning instead of the gentler "Nothing logged yet"
+    // greeting.
     const msg = buildGreetingMessage({
       ...baseOpts,
       caloriesEatenToday: 0,
-      // Override target so calLeft (2100) is > 400 and the >400 branch
-      // would normally win — this test confirms the zero-logged check
-      // runs INSTEAD when caloriesEatenToday is 0. Without the explicit
-      // branch the user would see "you have 2100 kcal left" first thing
-      // in the morning, which reads tone-deaf.
       caloriesTarget: 2100,
     });
-    // With current implementation, the >400 branch wins because it's
-    // checked first. This test documents that bug + records the desired
-    // behavior. If the implementation is fixed to check zero-logged
-    // first, change this expectation accordingly.
-    expect(msg).toContain("Happy Wednesday, Julie.");
-    expect(msg).toContain("2100 kcal left");
+    expect(msg).toBe(
+      "Happy Wednesday, Julie. Nothing logged yet today — what kicked it off?",
+    );
   });
 
   it("uses the system today's date when `date` is omitted", () => {
