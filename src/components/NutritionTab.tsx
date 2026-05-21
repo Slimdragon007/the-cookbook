@@ -13,6 +13,8 @@ import {
   type PortionUnit,
 } from "@/lib/unit-conversions";
 import MacroGrid, { type MacroValues } from "@/components/ui/MacroGrid";
+import { Ring } from "@/components/ui/Ring";
+import { Mono } from "@/components/ui/Mono";
 
 interface Props {
   ingredients: Ingredient[];
@@ -73,11 +75,92 @@ export default function NutritionTab({
         fat: perServing.fat,
       };
 
+  // Per-serving values for the new Ring + macro-split hero (TASK-027 Phase 3).
+  // Prototype reference: mobile.jsx NutritionBlock lines 410-446.
+  const cal = perServing.calories;
+  const p = perServing.protein;
+  const c = perServing.carbs;
+  const f = perServing.fat;
+  // Macro split: protein/carbs/fat caloric contribution (4/4/9 kcal per gram).
+  const macroCalTotal = p * 4 + c * 4 + f * 9 || 1; // guard /0 with || 1
+  const pPct = Math.round(((p * 4) / macroCalTotal) * 100);
+  const cPct = Math.round(((c * 4) / macroCalTotal) * 100);
+  const fPct = Math.round(((f * 9) / macroCalTotal) * 100);
+
   return (
     <div>
       <h2 className="font-display text-[32px] text-ink mb-6">Nutrition</h2>
 
-      {/* Totals — MacroGrid. */}
+      {/* Per-serving hero: Ring + total-kcal column. Phase 3 addition matching
+          prototype mobile.jsx NutritionBlock. Ring is sized to the prototype's
+          92px (slightly smaller on narrow viewports via min). */}
+      <section className="mb-6 flex items-center gap-4">
+        <Ring
+          pct={100}
+          size={92}
+          stroke={9}
+          color="rgb(var(--ink))"
+          ariaLabel={`${cal} kcal per serving`}
+        >
+          <div className="text-center leading-none">
+            <Mono className="text-[22px] font-medium">{cal}</Mono>
+            <div className="text-[9px] tracking-[0.12em] text-ink-soft uppercase mt-1 font-semibold">
+              per serving
+            </div>
+          </div>
+        </Ring>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-ink-soft mb-1">
+            For <Mono className="text-ink font-semibold">{servings}</Mono>{" "}
+            {servingsLabel}
+          </div>
+          <div className="text-[22px] font-medium tracking-[-0.02em]">
+            <Mono>{cal * servings}</Mono>{" "}
+            <span className="text-[13px] text-ink-mute">total kcal</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Macro split — horizontal stacked bar + 3-row breakdown. */}
+      <section className="mb-8">
+        <h3 className="font-sans text-xs font-semibold tracking-[0.08em] uppercase text-accent mb-3">
+          Macro split
+        </h3>
+        <div
+          className="h-2 flex rounded-full overflow-hidden mb-3 bg-rule/40"
+          role="img"
+          aria-label={`Protein ${pPct}%, carbs ${cPct}%, fat ${fPct}%`}
+        >
+          {pPct > 0 && <div className="bg-ink" style={{ width: `${pPct}%` }} />}
+          {cPct > 0 && (
+            <div className="bg-accent" style={{ width: `${cPct}%` }} />
+          )}
+          {fPct > 0 && (
+            <div className="bg-ink-mute" style={{ width: `${fPct}%` }} />
+          )}
+        </div>
+        {(
+          [
+            { label: "Protein", grams: p, pct: pPct, color: "bg-ink" },
+            { label: "Carbs", grams: c, pct: cPct, color: "bg-accent" },
+            { label: "Fat", grams: f, pct: fPct, color: "bg-ink-mute" },
+          ] as const
+        ).map((m) => (
+          <div
+            key={m.label}
+            className="flex items-center gap-3 py-2.5 border-b border-rule last:border-b-0 text-sm"
+          >
+            <span className={`w-2 h-2 rounded-full ${m.color}`} aria-hidden />
+            <span className="flex-1 text-ink">{m.label}</span>
+            <Mono className="text-ink-soft min-w-9 text-right">{m.pct}%</Mono>
+            <Mono className="font-semibold min-w-11 text-right">
+              {m.grams}g
+            </Mono>
+          </div>
+        ))}
+      </section>
+
+      {/* Totals — MacroGrid. Kept for at-a-glance scaled-total reference. */}
       <section className="mb-8">
         <h3 className="font-sans text-xs font-semibold tracking-[0.08em] uppercase text-accent mb-3">
           Total
