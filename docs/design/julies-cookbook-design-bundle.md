@@ -510,11 +510,20 @@ Hearth shipped clean (Phase 1 → Phase 3 closed 2026-04-30) but read as "B2B Sa
 
 The Hearth primitives (`Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`) stay; their tokens are retoned but the shape and props are unchanged.
 
-New primitives added in TASK-018:
+**Primitives history.** `Surface`, `Tag`, and `MacroPill` were initially shipped speculatively in TASK-018 then deleted per YAGNI (commit `a39e95a` on TASK-023's branch) when the canary surfaces landed without importing them. **TASK-027 re-introduced** `Surface` and `MacroPill` (plus added `Ring`, `SerifIt`, `Mono`, `GreetingBubble`) once the interior screen retrofits created 5+ call sites per primitive — see ADR-007 for the YAGNI-reversal rationale. `Tag` stayed deleted (no confirmed call sites in TASK-027's six phases).
 
-- **`Surface`** (`src/components/ui/Surface.tsx`) — `treatment="bordered" | "glass" | "flat"` card wrapper.
-- **`Tag`** (`src/components/ui/Tag.tsx`) — pill chip, `accent` and `active` props.
-- **`MacroPill`** (`src/components/ui/MacroPill.tsx`) — atomic macro display for inline use (label + mono value + unit).
+Current primitives in `src/components/ui/`:
+
+- **`Button`** / **`Input`** / **`InputLabel`** — TASK-018 retones (Hearth-era).
+- **`MacroGrid`** — TASK-018 retone, 4-cell macro display.
+- **`MeasurementToggle`** — TASK-018, US/Metric switch wired to `useMeasurementSystem`.
+- **`StepRibbon`** — TASK-018, demo step progression.
+- **`Ring`** (TASK-027) — circular SVG progress, configurable size/stroke/colors.
+- **`MacroPill`** (TASK-027) — atomic macro display: Mono value + unit + uppercase label.
+- **`Surface`** (TASK-027) — card wrapper with `treatment="bordered" | "glass" | "flat"`.
+- **`SerifIt`** (TASK-027) — Instrument Serif italic span wrapper + tight tracking.
+- **`Mono`** (TASK-027) — JetBrains Mono + tabular-nums span wrapper.
+- **`GreetingBubble`** (TASK-027) — composite for Library: ink-disc avatar + dynamic greeting message + chat-tail.
 
 ## Inline patterns (no new files)
 
@@ -527,7 +536,7 @@ Accent-soft disc (`bg-accent-soft text-accent-ink`), 36×36, with the numeral re
 
 ## Ingredient row notes
 
-Asterisk superscript + footnote block below the ingredient list. Don't inline comma-notes ("salt, kosher" → "salt*" + footnote "*kosher"). Future Phase 2 work.
+Asterisk superscript + footnote block below the ingredient list. Don't inline comma-notes ("salt, kosher" → "salt*" + footnote "*kosher"). **UI shipped in TASK-027 Phase 3** wired to optional `Ingredient.note` field; data source still pending (either parse from comma-separated names or add an `ingredients.note` column via migration — separate follow-up).
 
 ## Decisions deferred from Phase 1 (TASK-018)
 
@@ -536,20 +545,35 @@ Asterisk superscript + footnote block below the ingredient list. Don't inline co
 
 ## Migration status
 
-| Surface                                                                                            | Phase 1 (TASK-018) | Notes                                                           |
-| -------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------- |
-| Foundation: `tailwind.config.ts`, `globals.css`, `layout.tsx`, `next/font`                         | ✅ Done            | Single-PR token swap.                                           |
-| UI primitives: `Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`                   | ✅ Retoned         |                                                                 |
-| New primitives: `Surface`, `Tag`, `MacroPill`                                                      | ✅ Added           |                                                                 |
-| `/` (gallery): `(main)/page.tsx`, `RecipeCard`, `RecipeGrid`                                       | ✅ Done            |                                                                 |
-| `/recipe/[id]`: `RecipeTabs`, `IngredientsTab`, `InstructionsTab`, `NutritionTab`, `RecipeActions` | ✅ Done            |                                                                 |
-| `MainNav`                                                                                          | ⏳ TASK-019        | Still pre-Hearth amber/slate; visually broken under new tokens. |
-| `/log` + `FoodLogForm` + `MealCard`                                                                | ⏳ TASK-020        |                                                                 |
-| `/summary` + `WeeklySummary`                                                                       | ⏳ TASK-021        |                                                                 |
-| `/grocery-list` + `GroceryListBuilder`                                                             | ⏳ TASK-022        |                                                                 |
-| `ChatDrawer` + `ChatFAB` (→ "Kitchen line")                                                        | ⏳ TASK-023        |                                                                 |
-| `/login`, `/signup`, `/auth/*`, `/demo`                                                            | ⏳ TASK-024        |                                                                 |
-| `/add-recipe`, `/profile`                                                                          | ⏳ TASK-025        |                                                                 |
-| Tweaks panel + multi-palette                                                                       | ⏳ TASK-026        | Persistence design first.                                       |
+> **Paper Editorial reskin + prototype-parity retrofit complete as of 2026-05-21.** TASK-018 through TASK-024 landed 2026-05-20; TASK-025 and TASK-026 (all three sub-PRs) landed 2026-05-21; TASK-027 (prototype-parity retrofit across all interior screens) landed 2026-05-21 in seven stacked PRs (#41 → #46 + Phase 7 docs). Every production surface now matches the Omelette prototype's layouts as well as its tokens.
+
+**Reskin v1 — token swap (TASK-018 → TASK-026):**
+
+| Surface                                                                                            | Status      | Notes                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundation: `tailwind.config.ts`, `src/app/globals.css`, `src/app/layout.tsx`, `next/font`         | ✅ TASK-018 | Single-PR token swap. Token colors later rewritten as `rgb(var(--*) / <alpha-value>)` in TASK-026 PR B with channel-decomposed RGB vars in `src/app/globals.css`. |
+| UI primitives: `Button`, `Input`, `MacroGrid`, `MeasurementToggle`, `StepRibbon`                   | ✅ TASK-018 | Retoned.                                                                                                                                                          |
+| `/` (gallery): `(main)/page.tsx`, `RecipeCard`, `RecipeGrid`                                       | ✅ TASK-018 |                                                                                                                                                                   |
+| `/recipe/[id]`: `RecipeTabs`, `IngredientsTab`, `InstructionsTab`, `NutritionTab`, `RecipeActions` | ✅ TASK-018 |                                                                                                                                                                   |
+| `MainNav`                                                                                          | ✅ TASK-019 |                                                                                                                                                                   |
+| `/log` + `FoodLogForm`                                                                             | ✅ TASK-020 | Meal entries inline in `FoodLogForm.tsx`; no extracted `MealCard` component.                                                                                      |
+| `/summary` + `WeeklySummary`                                                                       | ✅ TASK-021 | Weekly bar-chart visualization originally deferred to TASK-021.1; closed by TASK-027 Phase 5.                                                                     |
+| `/grocery-list` + `GroceryListBuilder`                                                             | ✅ TASK-022 |                                                                                                                                                                   |
+| `ChatDrawer` + `ChatFAB` (→ "Kitchen line")                                                        | ✅ TASK-023 |                                                                                                                                                                   |
+| `/login`, `/signup`, `/auth/*`, `/demo`                                                            | ✅ TASK-024 |                                                                                                                                                                   |
+| `/add-recipe`, `/profile`                                                                          | ✅ TASK-025 |                                                                                                                                                                   |
+| Tweaks panel + multi-palette (`/settings`)                                                         | ✅ TASK-026 | PR A (#37) + PR B (#38) + PR C (#39) all merged 2026-05-21. Deployed at SHA `adf493e`.                                                                            |
+
+**Reskin v2 — prototype-parity (TASK-027):**
+
+| Surface                                                                                    | Status              | Notes                                                                                                                           |
+| ------------------------------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| ADR + new primitives (`Ring`, `MacroPill`, `Surface`, `SerifIt`, `Mono`, `GreetingBubble`) | ✅ TASK-027 PR #41  | ADR-007 reverses TASK-018's YAGNI cleanup; 6 new files in `src/components/ui/` + 5 unit tests on `buildGreetingMessage`.        |
+| Library v2 (`/`)                                                                           | ✅ TASK-027 PR #42  | GreetingBubble (dynamic day/kcal-left) + TodaySnapshot (Ring + MacroPills + log button) + horizontal mobile RecipeCard.         |
+| Recipe detail v2                                                                           | ✅ TASK-027 PR #43  | IngredientsTab per-row checkboxes (active-cooking mark-off) + asterisk-footnoted notes UI. NutritionTab Ring + macro split bar. |
+| Food log v2 (`/log`)                                                                       | ✅ TASK-027 PR #44  | 104px hero Ring + macro progress bars + Ask-cookbook promotional button (via new `ChatContext`).                                |
+| Pulse v2 (`/summary`)                                                                      | ✅ TASK-027 PR #45  | 56px Instrument Serif italic display hero + trend % delta + bar chart with target line + Most-cooked ranked list.               |
+| Chat polish                                                                                | ✅ TASK-027 PR #46  | Sender uppercase eyebrows ("JULIE"/"COOKBOOK") + typing-dots animation (using existing `dot-pulse` keyframes).                  |
+| Docs cleanup (this commit)                                                                 | ✅ TASK-027 Phase 7 | task_plan.md TASK-027 finalized; CLAUDE.md Pitfall 7 added; progress.md entry appended.                                         |
 
 _End of Section 3._

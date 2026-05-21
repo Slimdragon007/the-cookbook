@@ -105,6 +105,13 @@ Wired in `.github/workflows/deploy.yml` GH secrets. Resolved in `src/lib/supabas
 **Status:** Resolved 2026-04-25 by ADR-001 (Cloudflare Pages chosen, `vercel.json` removed). Pitfall 6 stays in this list as institutional memory; the rule below remains active for future infra changes.
 **Rule:** Base handbook Law 4 applies. Any future deploy-target, vendor-swap, or build-pipeline change requires an ADR before code lands. No "quick experiments" on `main`.
 
+### Pitfall 7 — Token swap without layout swap
+
+**Symptom:** A "reskin" ships tokens + fonts + primitives but the screens look almost identical to the prior design, just retoned. User opens the app expecting the prototype and gets "the old screens in new colors."
+**Cause:** The Paper Editorial reskin (TASK-018 → TASK-026, shipped 2026-05-20/21) translated the Omelette prototype's tokens, fonts, and palette-switcher infrastructure but did not translate its layouts. The shipped screens were the Hearth-era compositions with new colors and fonts — the prototype's actual value (greeting bubble + Today snapshot Ring on Library, italic display hero on Pulse, kcal Ring + macro bars on Log, ingredient checkboxes + asterisk footnotes on Recipe detail, sender eyebrows + typing dots on Chat) was missing entirely. Slim identified this on 2026-05-21 via Chrome DevTools verification (tokens correct, layouts not).
+**Status:** Resolved 2026-05-21 by TASK-027 / ADR-007 (re-introduce prototype primitives + rebuild interior screens). Pitfall 7 stays in this list as institutional memory: a reskin has two layers, "apply tokens" and "rebuild compositions," and skipping the second leaves the redesign halfway done.
+**Rule:** Future reskin / redesign work must distinguish the two layers in its plan. If the source-of-truth prototype defines layouts beyond what the existing screens have, those layout deltas are first-class scope items, not implicit follow-ups. Token swaps are PR-1 of N, not the entire scope.
+
 ---
 
 ## 📂 5. POINTER TABLE
