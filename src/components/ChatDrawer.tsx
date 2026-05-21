@@ -291,10 +291,14 @@ export default function ChatDrawer({
                     SR users when loadingText updates. Fix per Codex P2
                     finding on PR #46 (2026-05-21). */}
                 <span className="sr-only">{loadingText}</span>
+                {/* Dots animate only when the user hasn't requested reduced
+                    motion. With reduced motion the dots stay visible but
+                    static; the sr-only live-region text above still
+                    announces state changes. */}
                 <span className="inline-flex items-center gap-1.5" aria-hidden>
-                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-1" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-2" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute animate-dot-3" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-1" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-2" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-3" />
                 </span>
               </span>
             </div>

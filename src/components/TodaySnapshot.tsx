@@ -148,12 +148,21 @@ export default function TodaySnapshot({ displayName }: TodaySnapshotProps) {
           </div>
         </div>
 
+        {/* 44×44 hit area (ADR-005 / WCAG 2.5.5) wrapping a 36×36 visible
+            disc. Same pattern as the IngredientsTab Stepper buttons.
+            The aria-label sits on the Link itself so SR users hear "Log a
+            meal" regardless of which DOM node receives focus. */}
         <Link
           href="/log"
           aria-label="Log a meal"
-          className="w-9 h-9 rounded-full bg-ink text-paper grid place-items-center shrink-0 hover:bg-accent-ink transition-colors active:scale-95"
+          className="w-11 h-11 grid place-items-center shrink-0 active:scale-95 group"
         >
-          <Plus size={16} />
+          <span
+            aria-hidden
+            className="w-9 h-9 rounded-full bg-ink text-paper grid place-items-center transition-colors group-hover:bg-accent-ink"
+          >
+            <Plus size={16} />
+          </span>
         </Link>
       </Surface>
 

@@ -221,7 +221,10 @@ export default function WeeklySummary({ topRecipes }: WeeklySummaryProps) {
         </div>
       </section>
 
-      {/* Bar chart — 7 days with dashed target line and labels above bars. */}
+      {/* Bar chart — 7 days with dashed target line and labels above bars.
+          Marked role="img" with a summary aria-label so SR users get the
+          chart's gist; the full data is available in the proper semantic
+          table below ("Daily breakdown"), so we don't duplicate it here. */}
       <section className="mb-10">
         <div className="flex items-baseline justify-between mb-3">
           <h3 className="font-sans text-xs font-semibold tracking-[0.08em] uppercase text-ink-soft">
@@ -229,7 +232,11 @@ export default function WeeklySummary({ topRecipes }: WeeklySummaryProps) {
           </h3>
           <span className="font-sans text-xs text-ink-mute">kcal / day</span>
         </div>
-        <div className="relative h-44 mt-4">
+        <div
+          role="img"
+          aria-label={`Bar chart of calorie intake over the last 7 days. Daily values: ${currentWeek.map((d) => `${d.meals === 0 ? "no data" : d.calories + " kcal"}`).join(", ")}. Daily target ${DAILY_TARGETS.cal} kcal. Average across logged days: ${avgCal} kcal. Full daily breakdown follows below.`}
+          className="relative h-44 mt-4"
+        >
           {/* Target line — dashed horizontal at target/max ratio. */}
           <div
             aria-hidden
