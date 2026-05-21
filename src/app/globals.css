@@ -18,6 +18,12 @@
   --accent-soft: 246 231 220;
   --accent-ink: 142 63 31;
   --accent-on: 252 251 247;
+
+  /* Voice indirection (TASK-026). [data-voice] overrides below repoint
+   * these at different next/font variables (set on <body> in layout.tsx).
+   * Default = Editorial (Instrument Serif italic + Inter). */
+  --font-display-active: var(--font-instrument);
+  --font-sans-active: var(--font-inter);
 }
 
 body {
@@ -301,4 +307,53 @@ body {
 
 [data-imagery="mono"] {
   --image-filter: grayscale(1) contrast(1.05);
+}
+
+/* Voice presets (TASK-026 PR C). Each repoints --font-display-active and
+ * --font-sans-active at a different next/font variable. The body keeps its
+ * font-mono unchanged (JetBrains Mono is universal across voices). Note:
+ * voice "editorial" is the default and lives in :root above. */
+
+[data-voice="notebook"] {
+  --font-display-active: var(--font-caveat);
+  --font-sans-active: var(--font-lora);
+}
+
+[data-voice="studio"] {
+  --font-display-active: var(--font-space-grotesk);
+  --font-sans-active: var(--font-space-grotesk);
+}
+
+/* Paper textures (TASK-026 PR C). Overlay a noise pattern via a
+ * pseudo-element on the data-paper wrapper. The default (smooth) renders
+ * nothing. Linen and Newsprint use SVG turbulence baked into data URLs
+ * so no asset files are needed. mix-blend-mode: multiply keeps the
+ * texture subtle against the paper-toned backgrounds. */
+
+[data-paper] {
+  position: relative;
+}
+
+[data-paper]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  background-image: var(--paper-texture, none);
+  transition: opacity 0.25s ease-out;
+}
+
+[data-paper="linen"]::before {
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+[data-paper="newsprint"]::before {
+  opacity: 0.18;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='turbulence' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
 }

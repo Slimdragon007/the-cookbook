@@ -11,6 +11,7 @@ import {
   BarChart3,
   MessageCircle,
   User,
+  Settings,
 } from "lucide-react";
 import clsx from "clsx";
 import ChatDrawer from "@/components/ChatDrawer";
@@ -87,6 +88,20 @@ export default function MainNav({ children }: { children: React.ReactNode }) {
             </span>
           </button>
           <Link
+            href="/settings"
+            className={clsx(
+              "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all w-full group",
+              isActive(pathname, "/settings")
+                ? "text-accent-ink bg-card border border-rule shadow-lift-sm"
+                : "text-ink-soft hover:text-ink hover:bg-card/60",
+            )}
+          >
+            <Settings className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
+            <span className="hidden xl:block font-sans text-[14px] font-semibold">
+              Settings
+            </span>
+          </Link>
+          <Link
             href="/profile"
             className={clsx(
               "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all w-full group",
@@ -126,6 +141,13 @@ export default function MainNav({ children }: { children: React.ReactNode }) {
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
               </button>
+              <Link
+                href="/settings"
+                aria-label="Settings"
+                className="w-9 h-9 rounded-xl bg-card border border-rule flex items-center justify-center text-ink-soft hover:bg-accent-soft hover:text-accent-ink active:scale-95 transition-all"
+              >
+                <Settings className="w-[16px] h-[16px]" />
+              </Link>
               <Link
                 href="/profile"
                 className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-on active:scale-95 transition-all"

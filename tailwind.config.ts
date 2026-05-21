@@ -38,10 +38,16 @@ const config: Config = {
         },
       },
       fontFamily: {
-        // CSS variables come from next/font in src/app/layout.tsx. The fallback
-        // chain protects the FOIT/FOUT window during Google Fonts load.
-        display: ["var(--font-instrument)", "Georgia", "serif"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        // TASK-026 voice indirection: --font-display-active and
+        // --font-sans-active are defined in globals.css and overridden per
+        // [data-voice] selector so users can switch typography at runtime.
+        // Default values point at Instrument Serif italic + Inter (the
+        // shipped Paper Editorial voice). next/font's actual font-face
+        // variables (--font-instrument, --font-inter, --font-caveat, etc.)
+        // are set on <body> in layout.tsx; the indirection picks which one
+        // each utility class resolves to.
+        display: ["var(--font-display-active)", "Georgia", "serif"],
+        sans: ["var(--font-sans-active)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
       },
       fontSize: {
