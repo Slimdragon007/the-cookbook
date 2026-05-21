@@ -13,10 +13,23 @@ import {
   toGrams,
   type PortionUnit,
 } from "@/lib/unit-conversions";
-import { Loader2, UtensilsCrossed } from "lucide-react";
+import { Loader2, UtensilsCrossed, Sparkles, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input, InputLabel } from "@/components/ui/Input";
-import MacroGrid, { type MacroValues } from "@/components/ui/MacroGrid";
+import { type MacroValues } from "@/components/ui/MacroGrid";
+import { Ring } from "@/components/ui/Ring";
+import { Mono } from "@/components/ui/Mono";
+import { useChat } from "@/components/ChatContext";
+
+// Default daily targets matching prototype data.js weekly.target. Same
+// constants used in TodaySnapshot — could be extracted to a shared
+// constants module when a third call site materializes.
+const DAILY_TARGETS = {
+  cal: 2100,
+  protein: 130,
+  carbs: 230,
+  fat: 70,
+};
 
 interface LogEntry {
   id: string;
@@ -51,6 +64,9 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
   );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  // Opens the ChatDrawer rendered by MainNav. Default is a no-op when this
+  // component is rendered outside MainNav (e.g. isolated tests).
+  const { openChat } = useChat();
 
   const { data, isLoading } = useSWR(`/api/log-meal?date=${logDate}`, fetcher, {
     revalidateOnFocus: false,
@@ -277,15 +293,97 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
         </div>
       </form>
 
-      {/* Day total: uses retoned MacroGrid. */}
-      {entries.length > 0 && (
-        <section className="mb-8">
-          <h3 className="font-sans text-xs font-semibold tracking-[0.08em] uppercase text-accent mb-3">
-            Day total
-          </h3>
-          <MacroGrid values={todayTotal} />
-        </section>
-      )}
+      {/* Day total hero — Ring + macro progress bars (TASK-027 Phase 4
+          prototype-parity, mobile.jsx MLog lines 469-489). Replaces the
+          previous MacroGrid layout. MacroGrid is still imported because
+          it's the export shape the day-totals reducer feeds; we keep the
+          import for type safety even though only the Ring+bars layout
+          renders. */}
+      {entries.length > 0 &&
+        (() => {
+          const cal = todayTotal.calories ?? 0;
+          const p = todayTotal.protein ?? 0;
+          const c = todayTotal.carbs ?? 0;
+          const f = todayTotal.fat ?? 0;
+          const calPct = Math.min(
+            100,
+            Math.round((cal / DAILY_TARGETS.cal) * 100),
+          );
+          const macros = [
+            {
+              label: "Protein",
+              value: p,
+              target: DAILY_TARGETS.protein,
+              color: "bg-ink",
+            },
+            {
+              label: "Carbs",
+              value: c,
+              target: DAILY_TARGETS.carbs,
+              color: "bg-accent",
+            },
+            {
+              label: "Fat",
+              value: f,
+              target: DAILY_TARGETS.fat,
+              color: "bg-ink-mute",
+            },
+          ] as const;
+          return (
+            <section className="mb-8">
+              <h3 className="font-sans text-xs font-semibold tracking-[0.08em] uppercase text-accent mb-3">
+                Day total
+              </h3>
+              <div className="grid grid-cols-[auto_1fr] gap-5 items-center">
+                <Ring
+                  pct={calPct}
+                  size={104}
+                  stroke={10}
+                  ariaLabel={`${calPct}% of daily calorie target`}
+                >
+                  <div className="text-center leading-none">
+                    <Mono className="text-[24px] font-medium">
+                      {Math.round(cal)}
+                    </Mono>
+                    <div className="text-[9px] tracking-[0.12em] text-ink-soft uppercase mt-1 font-semibold">
+                      of {DAILY_TARGETS.cal}
+                    </div>
+                  </div>
+                </Ring>
+                <div className="flex flex-col gap-2.5">
+                  {macros.map((m) => {
+                    const pct = Math.min(
+                      100,
+                      Math.round((m.value / m.target) * 100),
+                    );
+                    return (
+                      <div key={m.label}>
+                        <div className="flex justify-between mb-1 text-xs">
+                          <span className="text-ink-soft">{m.label}</span>
+                          <Mono>
+                            <span className="font-semibold">
+                              {Math.round(m.value)}
+                            </span>
+                            <span className="text-ink-mute">
+                              {" "}
+                              / {m.target}g
+                            </span>
+                          </Mono>
+                        </div>
+                        <div className="h-1.5 bg-rule/40 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${m.color} rounded-full transition-all duration-300`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
 
       {/* Entries */}
       <h3 className="font-display text-[24px] text-ink mb-4">
@@ -337,6 +435,27 @@ export default function FoodLogForm({ recipes }: { recipes: Recipe[] }) {
           ))}
         </ul>
       )}
+
+      {/* Ask-cookbook promotional button — TASK-027 Phase 4. Accent-soft bg
+          + sparkle icon + 2-line label; opens the ChatDrawer that MainNav
+          owns. Prototype reference: mobile.jsx MLog lines 513-525. */}
+      <button
+        type="button"
+        onClick={openChat}
+        className="mt-6 w-full flex items-center gap-3 p-3.5 bg-accent-soft border-0 rounded-[14px] text-left hover:bg-accent hover:text-accent-on active:scale-[0.99] transition-all group"
+        aria-label="Open Kitchen line"
+      >
+        <Sparkles className="w-5 h-5 text-accent-ink group-hover:text-accent-on shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="font-sans text-[13px] font-semibold text-accent-ink group-hover:text-accent-on">
+            Ask the cookbook
+          </div>
+          <div className="font-sans text-xs text-accent-ink/70 group-hover:text-accent-on/80 italic">
+            &ldquo;What should I make for dinner with what I have?&rdquo;
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-accent-ink group-hover:text-accent-on shrink-0" />
+      </button>
     </div>
   );
 }

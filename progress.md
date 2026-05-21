@@ -2,6 +2,34 @@
 
 > Append-only. Every executor adds an entry on task completion. See base handbook Law 3.
 
+## 2026-05-21 — TASK-027 Paper Editorial prototype-parity retrofit
+
+**Executor:** Claude (Slim's session)
+
+**Branch:** `feat/paper-editorial-prototype-parity` (root) + 6 stacked sub-branches
+
+**Task:** The Paper Editorial reskin (TASK-018 → TASK-026) captured tokens + fonts + palette infrastructure but not the prototype's layouts. The shipped reskin retoned existing Hearth-era screens; the prototype defines substantively different compositions on top of those tokens (greeting bubble + Today Ring on Library, italic display hero on Pulse, kcal Ring + macro bars on Log, ingredient checkboxes + asterisk footnotes on Recipe detail, sender eyebrows + typing dots on Chat). Slim identified the gap on 2026-05-21 via Chrome DevTools verification (tokens correct, layouts not). TASK-027 closes the gap.
+
+**Approach:** Seven stacked PRs (six code + one docs), each independently mergeable. Branch base: `origin/main` at SHA `adf493e` (post-TASK-026 PR C). Backend invariant preserved (no API / middleware / Supabase / schema / env changes; read-only additions to `src/lib/data.ts` only).
+
+**Sub-PRs (in merge order):**
+
+- **#41 (Phase 0+1, commits `46d2cc3` + `bb4d87b`)** — ADR-007 (re-introduce Surface/MacroPill/Ring/SerifIt/Mono/GreetingBubble primitives; reverses TASK-018's YAGNI cleanup since prototype-parity creates 5+ call sites per primitive). Six new files in `src/components/ui/`. +5 unit tests on the exported `buildGreetingMessage` helper.
+- **#42 (Phase 2, commit `3d04fb2`)** — Library (`/`): new `<TodaySnapshot>` client island fetches today's food_log via SWR, renders `<GreetingBubble>` + bordered `<Surface>` with Ring + macro readout + log-meal button. RecipeCard rewritten with two layouts — mobile horizontal 92×92 thumb + meta column, desktop md+ portrait card. New `getCookedCounts(userId)` aggregate against `food_log`.
+- **#43 (Phase 3, commit `725ff7d`)** — Recipe detail: IngredientsTab per-row checkboxes (active-cooking mark-off) + asterisk-footnoted ingredient notes (UI wired to optional `Ingredient.note` field; data source still pending). NutritionTab gains 92px Ring + horizontal macro-split bar hero.
+- **#44 (Phase 4, commit `15a2797`)** — Food log: 104px hero Ring + adjacent macro progress bars replacing the day-total MacroGrid. New Ask-cookbook promotional button (accent-soft bg + sparkle + 2-line label) opens ChatDrawer via new `ChatContext` (MainNav owns the state, exposes `openChat()` to descendants).
+- **#45 (Phase 5, commit `257eda7`)** — Pulse (`/summary`): 56px Instrument Serif italic display hero (`Avg kcal · weekday`) + trend % delta line (computed from 14-day SWR fetch split into current/previous 7-day windows) + bar chart with dashed target line + day-letter labels + Most-cooked-this-month ranked list. New `getMostCookedRecipes(userId, days, limit)` server aggregate. Closes TASK-021.1 deferred bar chart.
+- **#46 (Phase 6, commit `73748d1`)** — Chat polish: sender uppercase eyebrows ("JULIE"/"COOKBOOK") above bubbles + three-dot typing animation using existing `dot-pulse` keyframes from `tailwind.config.ts`. Loading text preserved as `aria-label` for SR users.
+- **Phase 7 docs (this commit)** — task_plan.md TASK-027 finalized; design bundle §3 migration table extended with v2 rows; CLAUDE.md gains Pitfall 7 ("token swap without layout swap"); this progress entry.
+
+**Backend invariant:** Preserved. Read-only additions to `src/lib/data.ts`: `getCookedCounts`, `getMostCookedRecipes`. Read-only addition to `src/lib/types.ts`: optional `Ingredient.note` field. No API routes, middleware, Supabase schema, env vars, or auth flow touched.
+
+**Verification:** Each PR passed `npm run lint` clean + `npx tsc --noEmit` clean + `npm run test` (163 passed / 7 pre-existing skips on every commit). Husky pre-commit hooks fired on each commit. Browser smoke deferred to post-merge production verification.
+
+**Plan:** `~/.claude/plans/abstract-dreaming-willow.md`. ADR: `docs/adr/ADR-007-reintroduce-prototype-primitives.md`. Source prototype files (read-only, outside repo per trust contract): `~/Downloads/{Julie's Cookbook.html, app.jsx, ui.jsx, mobile.jsx, desktop.jsx, tweaks-app.jsx, tweaks-panel.jsx, browser-window.jsx, ios-frame.jsx, data.js, HANDOFF.md}`.
+
+**Pitfall learned (CLAUDE.md Pitfall 7):** Token swap without layout swap. The original reskin retoned existing screens; the prototype's value was in its compositions, not its colors. Future reskin work must distinguish "apply tokens" from "rebuild compositions" and budget both. Token swap is PR-1 of N, not the entire scope.
+
 ## 2026-05-21 — TASK-026 PR C Cloudflare build close-out
 
 **Executor:** Codex

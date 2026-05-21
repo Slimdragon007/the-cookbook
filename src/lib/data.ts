@@ -176,6 +176,89 @@ export async function getRecipeById(
   return mapRecipe(recipe as SupabaseRecipe, mappedIngredients);
 }
 
+// getCookedCounts — read-only aggregate against food_log. Returns a Map of
+// recipe_id → number-of-times-logged. Used by the Library screen to display
+// the prototype's "cooked Nx" eyebrow on each recipe card. Added per
+// TASK-027 Phase 2.
+//
+// The query loads every food_log row for the user (just recipe_id column;
+// no other fields needed) and aggregates in memory. For a family cookbook
+// with hundreds of log entries this is trivial; if it grows to millions we
+// can move to a per-recipe count() materialized view, but that's a long way
+// off. No schema changes — read-only against the existing table.
+export async function getCookedCounts(
+  userId?: string,
+): Promise<Map<string, number>> {
+  if (!userId) return new Map();
+
+  const { data, error } = await supabase
+    .from("food_log")
+    .select("recipe_id")
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(`Failed to fetch cooked counts: ${error.message}`);
+  }
+
+  const counts = new Map<string, number>();
+  (data || []).forEach((row: { recipe_id: string | null }) => {
+    if (!row.recipe_id) return;
+    counts.set(row.recipe_id, (counts.get(row.recipe_id) || 0) + 1);
+  });
+  return counts;
+}
+
+// getMostCookedRecipes — server-side aggregate of food_log entries grouped
+// by recipe_id, sorted by count desc, limited. Used by the Pulse screen's
+// "Most-cooked this month" ranked list. Added per TASK-027 Phase 5.
+//
+// Same read-only pattern as getCookedCounts; no schema changes. The join
+// to recipes(id, name) is in the same query so the result has display
+// names ready without a follow-up lookup.
+export interface MostCookedRecipe {
+  id: string;
+  name: string;
+  cookedCount: number;
+}
+
+export async function getMostCookedRecipes(
+  userId: string | undefined,
+  days = 30,
+  limit = 5,
+): Promise<MostCookedRecipe[]> {
+  if (!userId) return [];
+
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const sinceStr = since.toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("food_log")
+    .select("recipe_id, recipes(id, name)")
+    .eq("user_id", userId)
+    .gte("log_date", sinceStr);
+
+  if (error) {
+    throw new Error(`Failed to fetch most-cooked recipes: ${error.message}`);
+  }
+
+  const counts = new Map<string, { name: string; count: number }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (data || []).forEach((row: any) => {
+    if (!row.recipe_id || !row.recipes) return;
+    const existing = counts.get(row.recipe_id);
+    counts.set(row.recipe_id, {
+      name: row.recipes.name,
+      count: (existing?.count || 0) + 1,
+    });
+  });
+
+  return Array.from(counts.entries())
+    .map(([id, { name, count }]) => ({ id, name, cookedCount: count }))
+    .sort((a, b) => b.cookedCount - a.cookedCount)
+    .slice(0, limit);
+}
+
 export async function getAllRecipeIds(userId?: string): Promise<string[]> {
   if (!userId) return [];
 

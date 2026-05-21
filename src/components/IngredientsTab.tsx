@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Ingredient } from "@/lib/types";
 import { formatQuantity } from "@/lib/fractions";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { MeasurementToggle } from "@/components/ui/MeasurementToggle";
+import { Mono } from "@/components/ui/Mono";
 import { useMeasurementSystem } from "@/lib/measurement-system";
 import { convertForDisplay } from "@/lib/unit-conversions";
+import { cn } from "@/lib/utils";
 
 interface Props {
   ingredients: Ingredient[];
@@ -30,10 +33,14 @@ export default function IngredientsTab({
   const scale = servings / baseServings;
   const { system } = useMeasurementSystem();
 
-  // Returns the rendered quantity + unit pair for one ingredient row.
-  // - Imperial keeps the existing cooking-fraction formatter ("1 1/2 cups").
-  // - Metric converts known units to ml/g; for pass-through units (each, can)
-  //   the label is unchanged so fractions still render naturally.
+  // Local checkbox state for cooking-mode mark-off (per TASK-027 Phase 3,
+  // prototype mobile.jsx MRecipe ingredient rows). Pure UI state; resets
+  // when the user navigates away from the recipe. Persisting per-recipe
+  // would be a separate scope item (no current call site for it).
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const toggle = (id: string) =>
+    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+
   function renderQuantity(ing: Ingredient): { qty: string; unit: string } {
     if (ing.quantity == null) return { qty: "", unit: ing.unit ?? "" };
     if (system === "imperial") {
@@ -64,6 +71,12 @@ export default function IngredientsTab({
   );
   const categories = Object.keys(grouped);
   const showHeadings = categories.length > 1 || categories[0] !== "Other";
+
+  // Notes are a no-op today (the schema has no `note` column yet), but the
+  // UI wires the asterisk-superscript + footnote-block pattern from
+  // prototype mobile.jsx MRecipe lines 352-361 so that when notes land
+  // they render correctly without another UI pass.
+  const ingredientsWithNotes = ingredients.filter((ing) => ing.note);
 
   return (
     <div>
@@ -102,7 +115,9 @@ export default function IngredientsTab({
         </div>
       </div>
 
-      {/* IngredientList — paper editorial. Grouped sections, rule row dividers. */}
+      {/* IngredientList — paper editorial. Grouped sections, rule row dividers.
+          Each row is now a button toggling its checked state. The checkbox is
+          a 22×22 square on the left; clicking the row (anywhere) toggles. */}
       <div>
         {categories.map((category) => (
           <section key={category} className="mb-6">
@@ -113,24 +128,91 @@ export default function IngredientsTab({
             )}
             {grouped[category].map((ing) => {
               const { qty, unit } = renderQuantity(ing);
+              const isChecked = !!checked[ing.id];
               return (
-                <div
+                <button
                   key={ing.id}
-                  className="flex justify-between gap-4 py-2.5 border-b border-rule last:border-b-0"
+                  type="button"
+                  onClick={() => toggle(ing.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 py-2.5 border-b border-rule last:border-b-0 text-left transition-opacity",
+                    isChecked && "opacity-50",
+                  )}
+                  aria-pressed={isChecked}
+                  aria-label={`${isChecked ? "Uncheck" : "Check off"} ${ing.name}`}
                 >
-                  <span className="font-sans text-base text-ink">
-                    {ing.name}
+                  {/* Checkbox — 22×22 square, accent-bg when checked. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "w-[22px] h-[22px] rounded-md border-[1.5px] flex items-center justify-center shrink-0 transition-colors",
+                      isChecked
+                        ? "bg-accent border-accent text-accent-on"
+                        : "border-rule bg-card",
+                    )}
+                  >
+                    {isChecked ? <Check size={14} strokeWidth={3} /> : null}
                   </span>
-                  <span className="font-mono text-sm font-medium text-ink-soft tabular-nums whitespace-nowrap">
+
+                  <span
+                    className={cn(
+                      "font-sans text-base text-ink flex-1",
+                      isChecked && "line-through",
+                    )}
+                  >
+                    {ing.name}
+                    {ing.note ? (
+                      <sup
+                        className="text-accent font-semibold ml-0.5"
+                        aria-label={`Note: ${ing.note}`}
+                      >
+                        *
+                      </sup>
+                    ) : null}
+                  </span>
+                  <span
+                    className={cn(
+                      "font-mono text-sm font-medium text-ink-soft tabular-nums whitespace-nowrap",
+                      isChecked && "line-through",
+                    )}
+                  >
                     {qty && <>{qty} </>}
                     {unit}
                   </span>
-                </div>
+                </button>
               );
             })}
           </section>
         ))}
       </div>
+
+      {/* Footnote block — only renders when at least one ingredient has a
+          note. Notes are off today (schema gap); this block stays in the
+          tree as the rendering target for future data. */}
+      {ingredientsWithNotes.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-rule space-y-1.5">
+          {ingredientsWithNotes.map((ing) => (
+            <div
+              key={`note-${ing.id}`}
+              className="flex gap-2 text-xs text-ink-soft leading-relaxed"
+            >
+              <span className="text-accent font-semibold shrink-0" aria-hidden>
+                *
+              </span>
+              <span>
+                <span className="font-medium text-ink">{ing.name}</span> —{" "}
+                {ing.note}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Servings summary footer — kept Mono for tabular feel. */}
+      <p className="font-sans text-xs text-ink-mute mt-6 italic">
+        Scaled to <Mono>{servings}</Mono> {servingsLabel} from{" "}
+        <Mono>{baseServings}</Mono>.
+      </p>
     </div>
   );
 }

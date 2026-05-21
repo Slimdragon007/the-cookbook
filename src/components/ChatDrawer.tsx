@@ -230,6 +230,14 @@ export default function ChatDrawer({
               key={i}
               className={`text-sm ${msg.role === "user" ? "ml-8 text-right" : "mr-8"}`}
             >
+              {/* Sender eyebrow — TASK-027 Phase 6 prototype-parity
+                  (mobile.jsx MChat lines 730-733). Uppercase tracked label
+                  above each bubble, aligned with the bubble side. */}
+              <div
+                className={`text-[9px] font-semibold tracking-[0.12em] uppercase text-ink-mute mb-1 px-1 ${msg.role === "user" ? "text-right" : "text-left"}`}
+              >
+                {msg.role === "user" ? "Julie" : "Cookbook"}
+              </div>
               <span
                 className={`inline-block px-4 py-3 rounded-2xl text-left font-sans font-medium ${
                   msg.role === "user"
@@ -261,8 +269,37 @@ export default function ChatDrawer({
           ))}
           {loading && (
             <div className="text-sm mr-8">
-              <span className="inline-block px-4 py-3 rounded-2xl bg-card border border-rule text-ink-soft font-sans font-medium animate-pulse">
-                {loadingText}
+              {/* Sender eyebrow + typing-dots animation. Replaces the
+                  "Thinking…"/"Searching the web…" text-with-pulse with the
+                  prototype's three-dot rhythm using existing dot-pulse
+                  keyframes (tailwind.config.ts lines 102-113). Loading
+                  text is preserved as aria-live for SR users. */}
+              <div className="text-[9px] font-semibold tracking-[0.12em] uppercase text-ink-mute mb-1 px-1 text-left">
+                Cookbook
+              </div>
+              <span
+                className="inline-block px-5 py-4 rounded-2xl bg-card border border-rule"
+                aria-live="polite"
+              >
+                {/* Visually-hidden announceable text. Screen readers
+                    announce content changes inside aria-live regions,
+                    but only when there's text inside — aria-label on the
+                    container does NOT reliably substitute. Putting
+                    loadingText in an sr-only span keeps it visually
+                    invisible (just the three dots show) while still
+                    announcing "Thinking…" or "Searching the web…" to
+                    SR users when loadingText updates. Fix per Codex P2
+                    finding on PR #46 (2026-05-21). */}
+                <span className="sr-only">{loadingText}</span>
+                {/* Dots animate only when the user hasn't requested reduced
+                    motion. With reduced motion the dots stay visible but
+                    static; the sr-only live-region text above still
+                    announces state changes. */}
+                <span className="inline-flex items-center gap-1.5" aria-hidden>
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-1" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-2" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-ink-mute motion-safe:animate-dot-3" />
+                </span>
               </span>
             </div>
           )}

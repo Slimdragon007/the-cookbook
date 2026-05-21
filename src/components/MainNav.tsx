@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import ChatDrawer from "@/components/ChatDrawer";
+import { ChatProvider } from "@/components/ChatContext";
 
 // Add is in position 3 (center of 5)
 const navItems = [
@@ -35,6 +36,9 @@ export default function MainNav({ children }: { children: React.ReactNode }) {
   const hideNav = pathname.startsWith("/recipe/");
   const fullBleed = hideNav;
   const [chatOpen, setChatOpen] = useState(false);
+  // Stable callback so ChatProvider's context value doesn't churn every render.
+  // useCallback with [] is safe — setChatOpen is identity-stable per React.
+  const openChat = useCallback(() => setChatOpen(true), []);
 
   return (
     <div className="min-h-screen bg-paper flex flex-col relative pb-20 lg:pb-0 overflow-x-hidden selection:bg-accent-soft selection:text-accent-ink">
@@ -160,15 +164,21 @@ export default function MainNav({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Main content */}
+      {/* Main content — wrapped in ChatProvider so descendants (FoodLogForm's
+          Ask-cookbook button, future Library suggested-recipe rows) can
+          open the same ChatDrawer that the sidebar Kitchen line button +
+          mobile chat icon trigger directly. Provider is scoped to <main>
+          because the surrounding nav chrome doesn't need it. */}
       <main className="flex-1 w-full min-w-0 lg:ml-28 xl:ml-72 transition-all duration-300">
-        {fullBleed ? (
-          children
-        ) : (
-          <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            {children}
-          </div>
-        )}
+        <ChatProvider openChat={openChat}>
+          {fullBleed ? (
+            children
+          ) : (
+            <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              {children}
+            </div>
+          )}
+        </ChatProvider>
       </main>
 
       {/* Mobile bottom nav — iOS-style tab bar */}

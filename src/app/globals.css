@@ -94,6 +94,24 @@ body {
   }
 }
 
+/* Reduced-motion guard — the ambient float animations and the page-transition
+ * fade are decorative motion; respect the user's preference by freezing them
+ * when prefers-reduced-motion is set. WCAG 2.3.3 / Apple HIG accessibility
+ * guidance. Added per TASK-027 Phase 9 a11y sweep (2026-05-21).
+ * Tailwind's `motion-safe:` / `motion-reduce:` variants handle the same
+ * concern in component-level utility classes (e.g. ChatDrawer typing dots
+ * use motion-safe:animate-dot-*); this rule covers the raw CSS animations
+ * declared above. */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-bg::before,
+  .ambient-bg::after {
+    animation: none !important;
+  }
+  main {
+    animation: none !important;
+  }
+}
+
 .ambient-bg .grid-overlay {
   position: absolute;
   inset: 0;

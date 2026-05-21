@@ -81,6 +81,7 @@ export default function RecipeTabs({
           ingredients={ingredients}
           scale={scale}
           servings={servings}
+          defaultServings={defaultServings}
           totalBatchWeightG={totalBatchWeightG}
         />
       )}
