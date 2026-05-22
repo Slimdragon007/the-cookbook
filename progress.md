@@ -1329,3 +1329,38 @@ Recommended next-session work plan for ADR-002:
 - No CI workflow change. Drift detection between repo migrations and remote stays manual; ADR-004 names this as an explicit accepted gap.
 
 **Next:** PR review → merge → Issue #8 closes. After this lands, the only outstanding handbook items are the populate-on-touch architecture stubs (`api.md`, `data.md`) and the schema/file-index sections of `@docs/REFERENCE.md`.
+
+## 2026-05-22 — TASK-034 Recipe Detail MISE speed pass
+
+**Executor:** Codex
+**Branch:** current Codex MISE migration branch
+**Task:** Apply the recommended fast, frontend-only Recipe Detail migration pass after Slim's design review, with special attention to speed, detail, ingredient measurement units, and preserving the backend.
+
+**Changed:**
+
+- Recipe Detail shell retuned toward the accepted MISE/Paper direction: tighter two-column rhythm, lighter media overlay, italic display title, bordered stat cells, and quieter chips.
+- `RecipeTabs` converted from the old underline/glass bar to a segmented ARIA tab control with `bg-ink text-card` active state.
+- `IngredientsTab` now exposes ingredient units as `Original / US / Metric`, keeps cooking fractions in original mode, supports US/metric display conversion, and normalizes slash-prefixed source units like `/cup`.
+- `InstructionsTab` and `NutritionTab` retuned to MISE card/rule language while preserving existing preparation parsing, serving scale, portion-unit dropdown, and macro calculations.
+- `unit-conversions` gained display conversion coverage for `original`, `us`, and `metric`; legacy `imperial` stays as a compatibility alias.
+- E2E coverage added for the Recipe Detail MISE pass. Existing nutrition-unit and food-log e2e selectors were updated to match current accessible controls, the new ARIA tab semantics, responsive MacroGrid layout, and the current `Logged.` success copy.
+
+**Backend invariant:**
+
+- No Supabase schema, auth, middleware, API route, scraper, Cloudinary, env-var, or slug-routing changes.
+- Numeric fallbacks touched during the work use `??` or explicit positive guards, preserving the project rule for zero-valued nutrition fields.
+
+**Verification:**
+
+- `npx vitest run src/lib/__tests__/unit-conversions.test.ts` passed.
+- `npm run test:e2e -- e2e/recipe-detail-mise.spec.ts` passed.
+- `npm run test:e2e -- e2e/nutrition-unit-picker.spec.ts` passed after updating stale selectors.
+- `npm run test:e2e -- e2e/food-log-unit-picker.spec.ts` passed after updating stale selectors.
+- `npm run test:e2e -- --grep-invert "Add recipe by URL"` passed: 29 passed, 1 skipped.
+- Prior sweep in this session passed lint, TypeScript, unit tests, `npm run build`, and `npm run build:cf`.
+- Full `npm run test:e2e` still requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the local shell for the add-recipe seed helper.
+- In-app browser smoke at `http://localhost:3000/recipe/e2e-test-pasta` showed the mobile Recipe Detail with MISE tabs, visible `Original / US / Metric` ingredient units, and normalized unit text.
+
+**Not changed:**
+
+- The broader Library/page-shell migration remains outside this task. This pass deliberately limited itself to Recipe Detail because this checkout does not contain the earlier full `src/components/mise/` migration that the session summary implied.
