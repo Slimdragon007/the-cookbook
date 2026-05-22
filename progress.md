@@ -1364,3 +1364,20 @@ Recommended next-session work plan for ADR-002:
 **Not changed:**
 
 - The broader Library/page-shell migration remains outside this task. This pass deliberately limited itself to Recipe Detail because this checkout does not contain the earlier full `src/components/mise/` migration that the session summary implied.
+
+## 2026-05-22 — GitHub repo renamed to The Cookbook
+
+**Executor:** Codex
+**Task:** Rename the GitHub repository from `julies-cookbook` to `the-cookbook` after Slim chose the cleaner product/repo direction.
+
+**Changed:**
+
+- GitHub repo renamed from `Slimdragon007/julies-cookbook` to `Slimdragon007/the-cookbook` via `gh repo rename`.
+- Local `origin` remote updated to `https://github.com/Slimdragon007/the-cookbook.git`.
+- Source-of-truth repo references updated in `CLAUDE.md` and the design bundle. README title now reads `The Cookbook`.
+
+**Not changed:**
+
+- Cloudflare Pages project remains `julies-cookbook`.
+- Production URL remains `https://julies-cookbook.pages.dev`.
+- `wrangler.toml`, Supabase redirect URLs, Cloudinary folder names, package name, localStorage keys, and test emails remain unchanged deliberately because those are service/runtime identifiers, not just display copy.
