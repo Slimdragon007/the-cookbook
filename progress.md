@@ -2,6 +2,54 @@
 
 > Append-only. Every executor adds an entry on task completion. See base handbook Law 3.
 
+## 2026-05-21 (late PM) — Session handoff: TASK-027 deploy verified, iPhone cache verification still open
+
+**Executor:** Claude (Sonnet 4.5, session ending)
+
+**Context.** Slim is temporarily moving to Codex for the next migration to test it out — not a permanent switch. Leaving this note so whoever picks up next (Codex, a future Claude session, or Slim directly) lands on the same page about what's live, what's verified, and what's still hanging.
+
+### What's live on production
+
+- **SHA `1534438`** is on `main` and deployed to `julies-cookbook.pages.dev`. This is the squash-merge of TASK-027 (Paper Editorial prototype-parity retrofit). See the TASK-027 entry immediately below for the full scope; tl;dr is six interior screens rebuilt to match the Omelette prototype's layouts on top of the v1 Paper Editorial token swap.
+- Cloudflare Pages build `26252245372` completed `success` at 2026-05-21T20:48:30Z (1:48 PM PDT).
+- Live login page programmatically verified from a Chrome DevTools-controlled browser — computed-style assertions all pass (`bg-paper #F2EFE8`, `accent #D97757`, Instrument Serif italic h1, pill button radius).
+- I could not verify the **interior** screens (Library / Recipe / Log / Pulse / Chat) from outside auth — they're middleware-gated and I had no credentials.
+
+### Open question at session end
+
+Slim reported his iPhone Safari showed "some changes but nothing crazy" on the live site after TASK-027 merged — meaning the gallery looked like the OLD pre-TASK-027 design (no greeting bubble, no Today snapshot Ring, recipe cards still portrait-on-mobile instead of horizontal).
+
+**Strongly suspected:** service worker cache on his device. The site has a SW registered via `src/components/ServiceWorkerRegistration.tsx` mounted in `src/app/layout.tsx`. `public/sw.js` was hardened in the old TASK-009 (2026-04-28) — bumped `CACHE_NAME` to `cookbook-v3` and switched HTML to network-pass-through — but only devices that have _already activated_ the post-TASK-009 SW get that behavior. A device whose SW was registered earlier is still on the old SWR HTML-caching pattern until the SW updates, which requires a full Safari cold-start.
+
+**Recommended cache-bust I walked him through (status: not confirmed):**
+
+1. Safari → tabs icon → switch to Private tab → `julies-cookbook.pages.dev` → sign in. If new design appears in private mode but NOT regular mode → confirmed cache.
+2. Force-quit Safari (swipe Safari card up off app switcher) → reopen → re-navigate. Forces cold start + SW activation.
+3. Nuclear: Settings → Safari → Advanced → Website Data → search "julies-cookbook" → swipe-delete entry.
+
+If next agent picks this up, the first move is "did Slim try the private-tab test, what did he see, and does the cache hypothesis hold?" Don't start writing new code against this question until that's answered — there's nothing to FIX in code; this is purely a client-side cache problem if the diagnosis is right.
+
+### Outstanding backlog items (in task_plan.md)
+
+- **TASK-028** — Live a11y audit (Lighthouse + axe-core/playwright as CI gate + manual VoiceOver/NVDA SR smoke + keyboard walkthrough). Needs the deployed URL; can't be done from unit-test level. ~half-day audit + ~1d follow-up fixes.
+- **TASK-029** — Design-token contrast fix. `text-ink-mute` is 1.87:1 on paper and `text-accent` is 2.73:1 — both fail WCAG AA. Fix requires an ADR per Pitfall 6 / Law 4 since it's a palette-level change.
+
+### Plan + ADR pointers for context
+
+- **Full plan + execution narrative:** `~/.claude/plans/abstract-dreaming-willow.md` — 4 addenda covering the original 6-screen retrofit, Codex review fixes (Phase 8), a11y sweep (Phase 9), and the Option-B squash-merge.
+- **ADR-007** (re-introduce Surface/MacroPill/Ring/SerifIt/Mono/GreetingBubble primitives): `docs/adr/ADR-007-reintroduce-prototype-primitives.md` — reverses TASK-018's YAGNI cleanup since TASK-027 created 5+ call sites per primitive.
+- **Prototype source (read-only reference, outside repo per trust contract):** `~/Downloads/{Julie's Cookbook.html, app.jsx, ui.jsx, mobile.jsx, desktop.jsx, tweaks-app.jsx, tweaks-panel.jsx, browser-window.jsx, ios-frame.jsx, data.js, HANDOFF.md}` — Slim also dropped a duplicate copy at `~/Downloads/The cookbook (1)/` with an `uploads/` directory containing 3 PNGs (1 screenshot of the prototype's Pulse screen + 2 of the prototype's developer chrome, one with a red doodle on empty paper space). Verified: the .jsx files in both folders are byte-identical to each other and to what TASK-027 already implemented. No additional design work was implied by the duplicate.
+
+### Backend invariant (still binding for the next contributor)
+
+Nothing in `src/app/api/`, `src/middleware.ts`, Supabase schema, or env vars should change unless an ADR is opened. Read-only additions to `src/lib/data.ts` (precedent: `getCookedCounts`, `getMostCookedRecipes` added in TASK-027) and to `src/lib/types.ts` (precedent: optional `Ingredient.note` field) are acceptable.
+
+### Untracked working-tree files at session end (NOT from TASK-027)
+
+`.mcp.json`, `AGENTS.md`, `CLAUDE.local.md`, `src/lib/ingredient-display-units.ts`, `src/lib/__tests__/ingredient-display-units.test.ts`, `src/app/api/__tests__/scrape.test.ts`, plus what appears to be in-flight Codex work (`docs/superpowers/`, `e2e/recipe-detail-mise.spec.ts`, plus modifications to `src/app/(main)/recipe/[id]/page.tsx` + `src/components/InstructionsTab.tsx` + `src/components/NutritionTab.tsx`). The Codex WIP is intentionally untouched by this handoff commit — only `progress.md` is staged here.
+
+— Claude, signing off.
+
 ## 2026-05-21 — TASK-027 Paper Editorial prototype-parity retrofit
 
 **Executor:** Claude (Slim's session)
