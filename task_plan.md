@@ -4,6 +4,8 @@
 
 ## Active
 
+- **TASK-035 — Fix Cloudinary upload 401 on recipe photo replacement / extractor image upload.** Done 2026-05-24. User reported the recipe extractor upload is not working. Production smoke with the E2E user reproduced `POST /api/recipe/photo` returning 502 while Cloudflare logs showed Cloudinary HTTP 401. Root cause: the shared edge signed-upload helper sent signed boolean parameter `overwrite=1`; Cloudinary signed uploads already overwrite by default, and the hand-built REST signature is sensitive to exact signed fields. Fix: omit `overwrite` from both file upload and URL upload FormData/signature payloads in `src/lib/scraper/cloudinary.ts`. Scope stayed limited to shared Cloudinary helper + tests + API doc note; no Supabase env-var naming, auth/middleware/schema, or infra changes. Verification: new failing test went red first, then green; `npm run lint`, `npx tsc --noEmit`, `npm run test`, `npm run build`, and `npm run build:cf` all pass.
+
 - **TASK-027 — Paper Editorial prototype-parity retrofit.** Done 2026-05-21. Started on branch `feat/paper-editorial-prototype-parity` off `origin/main` (SHA `adf493e`, post-TASK-026 PR C). Closed across **seven stacked PRs** (#41 → #46 + Phase 7 docs):
   - **PR #41 (Phase 0+1, commits `46d2cc3` + `bb4d87b`)** — ADR-007 (re-introduce Surface/MacroPill/Ring/SerifIt/Mono/GreetingBubble primitives, reversing TASK-018's YAGNI cleanup since this work creates 5+ call sites per primitive) + six new primitives in `src/components/ui/`. +5 unit tests on `buildGreetingMessage`.
   - **PR #42 (Phase 2, commit `3d04fb2`)** — Library (`/`) gains GreetingBubble + TodaySnapshot (Ring + MacroPills + log button) + horizontal mobile RecipeCard (92×92 thumb + meta column) + `getCookedCounts` read-only aggregate.

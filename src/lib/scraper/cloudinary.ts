@@ -41,9 +41,10 @@ export async function uploadFileToCloudinary(
   const timer = setTimeout(() => controller.abort(), 30_000);
   try {
     const timestamp = Math.floor(Date.now() / 1000).toString();
+    // Signed uploads overwrite by default; omitting the boolean avoids
+    // Cloudinary signature drift on manually-built edge requests.
     const signParams: Record<string, string> = {
       folder: "julies-cookbook",
-      overwrite: "1",
       public_id: publicId,
       timestamp,
     };
@@ -52,7 +53,6 @@ export async function uploadFileToCloudinary(
     fd.append("file", file);
     fd.append("folder", "julies-cookbook");
     fd.append("public_id", publicId);
-    fd.append("overwrite", "1");
     fd.append("timestamp", timestamp);
     fd.append("api_key", env.apiKey);
     fd.append("signature", signature);
@@ -99,9 +99,10 @@ export async function uploadToCloudinary(
       const timer = setTimeout(() => controller.abort(), 30_000);
       try {
         const timestamp = Math.floor(Date.now() / 1000).toString();
+        // Signed uploads overwrite by default; omitting the boolean avoids
+        // Cloudinary signature drift on manually-built edge requests.
         const signParams: Record<string, string> = {
           folder: "julies-cookbook",
-          overwrite: "1",
           public_id: publicId,
           timestamp,
         };
@@ -110,7 +111,6 @@ export async function uploadToCloudinary(
         fd.append("file", tryUrl);
         fd.append("folder", "julies-cookbook");
         fd.append("public_id", publicId);
-        fd.append("overwrite", "1");
         fd.append("timestamp", timestamp);
         fd.append("api_key", env.apiKey);
         fd.append("signature", signature);

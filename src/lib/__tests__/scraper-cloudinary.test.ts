@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { uploadFileToCloudinary } from "../scraper/cloudinary";
+import { uploadFileToCloudinary, uploadToCloudinary } from "../scraper/cloudinary";
 
 const env = {
   cloudName: "test-cloud",
@@ -37,6 +37,36 @@ describe("uploadFileToCloudinary", () => {
     expect(calls[0].url).toContain("test-cloud/image/upload");
     expect(calls[0].init?.method).toBe("POST");
     expect(calls[0].init?.body).toBeInstanceOf(FormData);
+    const form = calls[0].init?.body as FormData;
+    expect(form.get("public_id")).toBe("user-id/slug");
+    expect(form.get("folder")).toBe("julies-cookbook");
+    expect(form.has("overwrite")).toBe(false);
+  });
+
+  it("does not send overwrite in URL uploads because signed uploads overwrite by default", async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init) => {
+      const url = typeof input === "string" ? input : input.toString();
+      calls.push({ url, init });
+      return new Response(
+        JSON.stringify({ secure_url: "https://res.cloudinary.com/x/y.jpg" }),
+        { status: 200 },
+      );
+    }) as typeof globalThis.fetch;
+
+    const result = await uploadToCloudinary(
+      "https://example.com/photo.jpg",
+      "user-id/slug",
+      env,
+    );
+
+    expect(result).toBe("https://res.cloudinary.com/x/y.jpg");
+    expect(calls).toHaveLength(1);
+    const form = calls[0].init?.body as FormData;
+    expect(form.get("file")).toBe("https://example.com/photo.jpg");
+    expect(form.get("public_id")).toBe("user-id/slug");
+    expect(form.get("folder")).toBe("julies-cookbook");
+    expect(form.has("overwrite")).toBe(false);
   });
 
   it("returns null when Cloudinary returns a non-OK response", async () => {

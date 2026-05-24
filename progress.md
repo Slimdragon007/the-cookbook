@@ -2,6 +2,29 @@
 
 > Append-only. Every executor adds an entry on task completion. See base handbook Law 3.
 
+## 2026-05-24 — TASK-035 Cloudinary upload 401 fix
+
+**Executor:** Codex
+
+**Task:** Fix the broken upload path reported around the recipe extractor. Investigation covered both upload-like paths: automatic scrape image upload (`src/lib/scraper/cloudinary.ts` via `scrapeRecipe()`) and manual recipe photo replacement (`POST /api/recipe/photo`).
+
+**Root cause:** Production smoke with the E2E account and a disposable recipe reproduced `POST /api/recipe/photo` returning `502 {"error":"Upload failed"}`. Cloudflare Pages tail showed the route reached Cloudinary, then Cloudinary returned HTTP 401. The shared signed-upload helper was sending `overwrite=1` as a signed REST field. Cloudinary's signed upload contract requires the POST body fields to match the exact signed `name=value` pairs, and signed uploads already overwrite by default, so the boolean was unnecessary and brittle.
+
+**Changed:**
+
+- `src/lib/scraper/cloudinary.ts` — removed `overwrite` from the signed params and multipart body for both `uploadFileToCloudinary()` and `uploadToCloudinary()`. This keeps one shared edge-compatible Web Crypto SHA-1 signed upload path for manual photo replacement and scraper URL image upload.
+- `src/lib/__tests__/scraper-cloudinary.test.ts` — added red-first coverage that both file and URL uploads omit `overwrite` while still sending `folder`, `public_id`, and `file`.
+- `docs/architecture/api.md` — refreshed the scraper architecture note from the old dual-path stub to the ADR-002 shared `scrapeRecipe()` reality and documented the Cloudinary signed-upload guardrail.
+- `task_plan.md` — declared and closed TASK-035.
+
+**Verified:**
+
+- Red test first: `npm run test -- src/lib/__tests__/scraper-cloudinary.test.ts` failed on `form.has("overwrite")`.
+- Green targeted: `npm run test -- src/lib/__tests__/scraper-cloudinary.test.ts src/lib/__tests__/scraper-core.test.ts src/app/api/__tests__/scrape.test.ts` passed, 12 tests.
+- Full checks: `npm run lint` passed, `npx tsc --noEmit` passed, `npm run test` passed (176 passed / 7 skipped), `npm run build` passed, `npm run build:cf` passed.
+
+**Residual:** I cannot verify the production upload succeeds until this code is deployed. The pre-fix production smoke is recorded above and cleaned up its disposable recipe.
+
 ## 2026-05-21 (late PM) — Session handoff: TASK-027 deploy verified, iPhone cache verification still open
 
 **Executor:** Claude (Sonnet 4.5, session ending)
